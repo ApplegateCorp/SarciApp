@@ -1,15 +1,44 @@
+import os
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from app.database import Base, engine
+from app.database import Base, engine, SessionLocal
 from app import models
-from app.auth import RedirectToLogin
+from app.auth import RedirectToLogin, hash_password
 from app.routes import auth, tickets, wallet, admin, webhooks
 
 app = FastAPI(title="Sarcitopia")
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
+
+# Auto-seed admin + drinks on first run
+def _auto_seed():
+    db = SessionLocal()
+    try:
+        admin_email = os.getenv("ADMIN_EMAIL", "admin@sarcitopia.fr")
+        if not db.query(models.User).filter(models.User.email == admin_email).first():
+            admin_user = models.User(
+                name=os.getenv("ADMIN_NAME", "Admin"),
+                email=admin_email,
+                password_hash=hash_password(os.getenv("ADMIN_PASSWORD", "admin123")),
+                is_admin=True,
+                ticket_purchased=True,
+            )
+            db.add(admin_user)
+            db.commit()
+        if db.query(models.DrinkItem).count() == 0:
+            for name, price, emoji in [
+                ("Bière pression", 300, "🍺"), ("Bière bouteille", 350, "🍻"),
+                ("Vin rouge", 300, "🍷"), ("Vin blanc", 300, "🥂"),
+                ("Soft / eau", 150, "🥤"), ("Shot", 250, "🥃"),
+            ]:
+                db.add(models.DrinkItem(name=name, price_cents=price, emoji=emoji))
+            db.commit()
+    finally:
+        db.close()
+
+_auto_seed()
 
 # Redirect to /login when not authenticated on HTML pages
 @app.exception_handler(RedirectToLogin)
