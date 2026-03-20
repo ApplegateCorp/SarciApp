@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Mon billet — Sarcitopia{% endblock %}
+
+{% block head %}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
+{% block content %}
+<div class="ticket-page">
+  <h1>Mon billet</h1>
+
+  {% if paid %}
+  <div class="alert alert-success">🎉 Paiement confirmé ! Votre billet sera actif dans quelques instants. Vérifiez votre email pour le QR code.</div>
+  {% endif %}
+
+  {% if user.ticket_purchased %}
+  <!-- ── Ticket avec QR code ──────────────────────────────────────────── -->
+  <div class="ticket-card">
+    <div class="ticket-header">
+      <span class="ticket-badge">✅ Billet validé</span>
+      <h2>{{ user.name }}</h2>
+      <p>{{ user.email }}</p>
+    </div>
+    <div class="qr-container">
+      <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code" class="qr-code" />
+      <p class="qr-hint">Présentez ce QR code à l'entrée et au bar</p>
+    </div>
+    <div class="ticket-balance">
+      <span class="balance-label">Solde bar</span>
+      <span class="balance-amount">{{ "%.2f"|format(balance) }} €</span>
+    </div>
+    <a href="/wallet" class="btn-primary btn-full">💰 Recharger mon compte bar</a>
+  </div>
+
+  {% else %}
+  <!-- ── Pas encore de billet → embedded checkout ────────────────────── -->
+  <div class="ticket-card no-ticket">
+    <div class="ticket-header">
+      <h2>Bonjour, {{ user.name }} !</h2>
+      <p>Finalisez votre inscription en achetant votre billet ci-dessous.</p>
+    </div>
+  </div>
+
+  <div id="checkout-wrapper" class="checkout-wrapper">
+    <div id="checkout-loading" class="checkout-loading">
+      <div class="checkout-spinner"></div>
+      <p>Chargement du paiement…</p>
+    </div>
+    <div id="checkout"></div>
+  </div>
+
+  <script>
+    (async () => {
+      const stripe = Stripe('{{ stripe_pk }}');
+
+      // Fetch a client secret from our backend
+      const res = await fetch('/ticket/buy/session', { method: 'POST' });
+      if (!res.ok) {
+        document.getElementById('checkout-loading').innerHTML =
+          '<p class="alert alert-error">Impossible de charger le paiement. Rechargez la page.</p>';
+        return;
+      }
+      const { clientSecret } = await res.json();
+
+      // Hide spinner and mount embedded checkout
+      document.getElementById('checkout-loading').style.display = 'none';
+      const checkout = await stripe.initEmbeddedCheckout({ clientSecret });
+      checkout.mount('#checkout');
+    })();
+  </script>
+  {% endif %}
+</div>
+{% endblock %}

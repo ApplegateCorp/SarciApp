@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Mon compte bar — Sarcitopia{% endblock %}
+
+{% block head %}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
+{% block content %}
+<div class="wallet-page">
+  <h1>Mon compte bar</h1>
+
+  {% if paid %}
+  <div class="alert alert-success">✅ Rechargement confirmé ! Votre solde sera mis à jour dans quelques instants.</div>
+  {% endif %}
+
+  <!-- ── Balance card ──────────────────────────────────────────────────── -->
+  <div class="balance-card">
+    <span class="balance-label">Solde actuel</span>
+    <span class="balance-big">{{ "%.2f"|format(balance) }} €</span>
+  </div>
+
+  <!-- ── Top-up form ──────────────────────────────────────────────────── -->
+  <div class="topup-section">
+    <div class="card-form">
+      <h2>Recharger mon compte</h2>
+
+      <!-- Amount selector -->
+      <div id="amount-step">
+        <div class="amount-grid">
+          {% for amount in topup_amounts %}
+          <label class="amount-option">
+            <input type="radio" name="amount" value="{{ amount }}" {% if loop.index == 2 %}checked{% endif %} />
+            <span>{{ amount }} €</span>
+          </label>
+          {% endfor %}
+        </div>
+        <button id="btn-topup" class="btn-primary btn-full" onclick="startTopup()">
+          Recharger →
+        </button>
+      </div>
+
+      <!-- Embedded checkout mounts here -->
+      <div id="checkout-wrapper" class="hidden">
+        <div id="checkout-loading" class="checkout-loading">
+          <div class="checkout-spinner"></div>
+          <p>Chargement du paiement…</p>
+        </div>
+        <div id="checkout"></div>
+        <button class="btn-outline btn-full" style="margin-top:12px" onclick="cancelTopup()">
+          ← Changer le montant
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Transaction history ──────────────────────────────────────────── -->
+  {% if transactions %}
+  <div class="transactions">
+    <h2>Historique</h2>
+    {% for tx in transactions %}
+    <div class="tx-row {% if tx.amount_cents > 0 %}tx-credit{% else %}tx-debit{% endif %}">
+      <div>
+        <span class="tx-desc">{{ tx.description }}</span>
+        <span class="tx-date">{{ tx.created_at.strftime('%d/%m %H:%M') }}</span>
+      </div>
+      <span class="tx-amount">
+        {% if tx.amount_cents > 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} €
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  let checkoutInstance = null;
+
+  async function startTopup() {
+    const selected = document.querySelector('input[name="amount"]:checked');
+    if (!selected) return;
+
+    // Show checkout panel, hide amount picker
+    document.getElementById('amount-step').classList.add('hidden');
+    document.getElementById('checkout-wrapper').classList.remove('hidden');
+
+    const stripe = Stripe('{{ stripe_pk }}');
+
+    // Create session
+    const formData = new FormData();
+    formData.append('amount', selected.value);
+    const res = await fetch('/wallet/topup/session', { method: 'POST', body: formData });
+
+    if (!res.ok) {
+      document.getElementById('checkout-loading').innerHTML =
+        '<p class="alert alert-error">Impossible de charger le paiement. Rechargez la page.</p>';
+      return;
+    }
+
+    const { clientSecret } = await res.json();
+    document.getElementById('checkout-loading').style.display = 'none';
+
+    checkoutInstance = await stripe.initEmbeddedCheckout({ clientSecret });
+    checkoutInstance.mount('#checkout');
+  }
+
+  function cancelTopup() {
+    if (checkoutInstance) {
+      checkoutInstance.destroy();
+      checkoutInstance = null;
+    }
+    document.getElementById('checkout').innerHTML = '';
+    document.getElementById('checkout-loading').style.display = '';
+    document.getElementById('checkout-wrapper').classList.add('hidden');
+    document.getElementById('amount-step').classList.remove('hidden');
+  }
+</script>
+{% endblock %}

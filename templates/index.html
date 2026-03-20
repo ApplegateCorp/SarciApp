@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Sarcitopia — La Prairie des Merveilles{% endblock %}
+
+{% block fullpage %}
+
+<!-- ── HERO: full-viewport immersive entry ──────────────────────────────── -->
+<section class="hero-full">
+  <div class="hero-bg-texture"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">🦋 La Prairie des Merveilles</p>
+    <h1 class="hero-title">SARCITOPIA</h1>
+    <p class="hero-dates">28 · 29 · 30 Juin &nbsp;—&nbsp; Sur invitation</p>
+    <p class="hero-tagline">Un espace hors du temps,<br>by @sarcirecords &amp; friends.</p>
+    <div class="hero-actions">
+      {% if not user %}
+        <a href="/register" class="btn-hero">🎟 Prendre mon billet</a>
+        <a href="/login" class="btn-hero-ghost">J'ai déjà un compte</a>
+      {% else %}
+        <a href="/ticket" class="btn-hero">🎟 Mon billet</a>
+        <a href="/wallet" class="btn-hero-ghost">💰 Recharger mon compte</a>
+      {% endif %}
+    </div>
+  </div>
+  <a href="#discover" class="scroll-hint" aria-label="Découvrir">
+    <span class="scroll-arrow">↓</span>
+  </a>
+</section>
+
+<!-- ── MANIFESTO ──────────────────────────────────────────────────────────── -->
+<section id="discover" class="manifesto-section">
+  <div class="manifesto-inner">
+    <p class="manifesto-text">
+      Au milieu des prés et des amis,<br>
+      quelque chose de rare se passe.<br>
+      <em>Sarcitopia</em> — un festival qui ne ressemble à rien d'autre.
+    </p>
+    <p class="manifesto-text manifesto-text--sm">
+      De la musique, des rencontres, des consommations.<br>
+      Tout est ici, dans la prairie.
+    </p>
+  </div>
+</section>
+
+<!-- ── FEATURES ───────────────────────────────────────────────────────────── -->
+<section class="features-section">
+  <div class="container">
+    <div class="features-grid">
+
+      <div class="feature-block">
+        <div class="feature-num">01</div>
+        <div class="feature-icon-lg">🎟️</div>
+        <h3>Votre billet</h3>
+        <p>Achetez en ligne, recevez votre QR code par email. Présentez-le à l'entrée.</p>
+        {% if not user %}
+        <a href="/register" class="btn-feature">Acheter →</a>
+        {% endif %}
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-num">02</div>
+        <div class="feature-icon-lg">🍺</div>
+        <h3>Compte bar</h3>
+        <p>Rechargez votre compte à tout moment. Au bar, un scan de votre QR et c'est réglé.</p>
+        {% if user %}
+        <a href="/wallet" class="btn-feature">Recharger →</a>
+        {% endif %}
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-num">03</div>
+        <div class="feature-icon-lg">📱</div>
+        <h3>100% mobile</h3>
+        <p>Tout depuis votre téléphone. Aucune application à installer.</p>
+        <a href="/info" class="btn-feature">Infos pratiques →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── INFO STRIP ─────────────────────────────────────────────────────────── -->
+<section class="info-strip">
+  <div class="info-strip-inner">
+    <div class="info-strip-item">
+      <span class="info-strip-icon">📍</span>
+      <span>La Prairie des Merveilles</span>
+    </div>
+    <div class="info-strip-sep">·</div>
+    <div class="info-strip-item">
+      <span class="info-strip-icon">📅</span>
+      <span>28-30 Juin 2025</span>
+    </div>
+    <div class="info-strip-sep">·</div>
+    <div class="info-strip-item">
+      <span class="info-strip-icon">🌿</span>
+      <span>Sur invitation uniquement</span>
+    </div>
+    <div class="info-strip-sep">·</div>
+    <a href="/info" class="info-strip-link">Toutes les infos →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-logo">✦ SARCITOPIA</span>
+    <span class="footer-tagline">La Prairie des Merveilles &nbsp;·&nbsp; by @sarcirecords &amp; friends</span>
+    <a href="/register" class="footer-cta">Acheter un billet →</a>
+  </div>
+</footer>
+
+{% endblock %}

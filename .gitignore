@@ -1,0 +1,21 @@
+# Environment & secrets
+.env
+
+# Database
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Claude config
+.claude/

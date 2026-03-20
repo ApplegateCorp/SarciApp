@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Festival</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <main class="container">
+    <div class="form-page">
+      <h1>🔐 Accès admin</h1>
+
+      {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="/admin/login" class="card-form">
+        <label>Email admin
+          <input type="email" name="email" required autofocus />
+        </label>
+        <label>Mot de passe
+          <input type="password" name="password" required />
+        </label>
+        <button type="submit" class="btn-primary btn-full">Se connecter</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

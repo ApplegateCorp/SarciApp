@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#2E1A0E" />
+  <title>{% block title %}Sarcitopia{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="/" class="nav-brand">✦ SARCITOPIA</a>
+    <div class="nav-links">
+      <a href="/info" class="nav-link-subtle">Infos</a>
+      {% if user %}
+        <a href="/ticket" class="nav-link-subtle">Mon billet</a>
+        <a href="/wallet" class="nav-link-subtle">Bar</a>
+        <a href="/logout" class="nav-link-subtle">Déconnexion</a>
+      {% else %}
+        <a href="/login" class="nav-link-subtle">Connexion</a>
+        <a href="/register" class="nav-cta">🎟 Billets</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  {% block fullpage %}
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-logo">✦ SARCITOPIA</span>
+      <span class="footer-tagline">La Prairie des Merveilles &nbsp;·&nbsp; by @sarcirecords &amp; friends</span>
+      <a href="/register" class="footer-cta">Acheter un billet →</a>
+    </div>
+  </footer>
+  {% endblock %}
+
+</body>
+</html>

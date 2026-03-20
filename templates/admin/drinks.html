@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boissons — Festival</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/admin/dashboard" class="nav-brand">← Dashboard</a>
+    <span class="nav-brand">📋 Boissons</span>
+  </nav>
+  <main class="container">
+    <h1>Gérer les boissons</h1>
+
+    <div class="card-form">
+      <h2>Ajouter une boisson</h2>
+      <form method="post" action="/admin/drinks/add">
+        <label>Nom
+          <input type="text" name="name" required placeholder="Bière pression" />
+        </label>
+        <label>Prix (€)
+          <input type="number" name="price" step="0.5" min="0.5" required placeholder="3.50" />
+        </label>
+        <label>Emoji
+          <input type="text" name="emoji" value="🍺" maxlength="4" />
+        </label>
+        <button type="submit" class="btn-primary">Ajouter</button>
+      </form>
+    </div>
+
+    <div class="transactions" style="margin-top: 24px;">
+      <h2>Liste des boissons</h2>
+      {% for drink in drinks %}
+      <div class="tx-row">
+        <div>
+          <span class="drink-emoji">{{ drink.emoji }}</span>
+          <span class="tx-desc">{{ drink.name }}</span>
+          <span class="tx-date">{{ "%.2f"|format(drink.price_cents / 100) }} €</span>
+        </div>
+        <form method="post" action="/admin/drinks/{{ drink.id }}/toggle">
+          <button type="submit" class="btn-outline" style="padding: 4px 12px;">
+            {% if drink.available %}Désactiver{% else %}Activer{% endif %}
+          </button>
+        </form>
+      </div>
+      {% else %}
+      <p style="color: #888;">Aucune boisson ajoutée.</p>
+      {% endfor %}
+    </div>
+  </main>
+</body>
+</html>

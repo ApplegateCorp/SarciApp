@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Réserver votre billet — Sarcitopia{% endblock %}
+{% block content %}
+
+<div class="ticket-flow">
+
+  <!-- Left: ticket preview -->
+  <div class="ticket-flow-preview">
+    <div class="ticket-stub">
+      <div class="ticket-stub-top">
+        <span class="ticket-stub-event">✦ SARCITOPIA</span>
+        <span class="ticket-stub-sub">La Prairie des Merveilles</span>
+      </div>
+      <div class="ticket-stub-dashes"></div>
+      <div class="ticket-stub-body">
+        <div class="ticket-stub-row">
+          <span class="ticket-stub-label">Date</span>
+          <span class="ticket-stub-value">28 · 29 · 30 Juin</span>
+        </div>
+        <div class="ticket-stub-row">
+          <span class="ticket-stub-label">Lieu</span>
+          <span class="ticket-stub-value">La Prairie</span>
+        </div>
+        <div class="ticket-stub-row">
+          <span class="ticket-stub-label">Type</span>
+          <span class="ticket-stub-value">Pass 3 jours</span>
+        </div>
+        <div class="ticket-stub-row">
+          <span class="ticket-stub-label">Inclus</span>
+          <span class="ticket-stub-value">Compte bar ✓</span>
+        </div>
+      </div>
+      <div class="ticket-stub-dashes"></div>
+      <div class="ticket-stub-qr">
+        <div class="ticket-stub-qr-placeholder">
+          <span>QR code</span>
+          <span class="ticket-stub-qr-hint">reçu par email</span>
+        </div>
+      </div>
+    </div>
+    <p class="ticket-flow-hint">Votre QR code sera envoyé par email après paiement.</p>
+  </div>
+
+  <!-- Right: form -->
+  <div class="ticket-flow-form">
+    <h1>Réserver votre billet</h1>
+    <p class="form-sub">Créez votre compte pour finaliser votre inscription.</p>
+
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/register" class="card-form">
+      <label>Prénom et nom
+        <input type="text" name="name" required placeholder="Jean Dupont" autofocus />
+      </label>
+      <label>Adresse email
+        <input type="email" name="email" required placeholder="jean@example.com" />
+      </label>
+      <label>Mot de passe
+        <input type="password" name="password" required minlength="8" placeholder="Au moins 8 caractères" />
+      </label>
+      <button type="submit" class="btn-primary btn-full btn-lg">
+        Créer mon compte &amp; acheter →
+      </button>
+    </form>
+
+    <p class="form-footer">Déjà inscrit ? <a href="/login">Se connecter</a></p>
+  </div>
+
+</div>
+
+{% endblock %}

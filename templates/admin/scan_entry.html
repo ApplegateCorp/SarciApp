@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scanner entrée — Festival</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/admin/dashboard" class="nav-brand">← Dashboard</a>
+  </nav>
+  <main class="container">
+    <h1>🎟️ Contrôle entrées</h1>
+
+    <div id="result-box" class="result-box hidden"></div>
+
+    <div class="scanner-container">
+      <div id="reader"></div>
+      <button id="start-btn" class="btn-primary btn-full" onclick="startScanner()">Démarrer le scanner</button>
+      <button id="stop-btn" class="btn-outline btn-full hidden" onclick="stopScanner()">Arrêter</button>
+    </div>
+
+    <!-- Manual fallback -->
+    <details class="manual-entry">
+      <summary>Saisie manuelle</summary>
+      <form id="manual-form" class="card-form" style="margin-top:12px">
+        <label>Token QR
+          <input type="text" id="manual-token" placeholder="Collez le token ici" />
+        </label>
+        <button type="submit" class="btn-primary btn-full">Valider</button>
+      </form>
+    </details>
+  </main>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    let scanner = null;
+
+    function showResult(ok, message) {
+      const box = document.getElementById('result-box');
+      box.className = 'result-box ' + (ok ? 'result-ok' : 'result-error');
+      box.textContent = message;
+      box.classList.remove('hidden');
+      setTimeout(() => box.classList.add('hidden'), 5000);
+    }
+
+    async function validateToken(token) {
+      const form = new FormData();
+      form.append('token', token);
+      const res = await fetch('/admin/validate-entry', { method: 'POST', body: form });
+      const data = await res.json();
+      showResult(data.ok, data.ok ? data.message : data.error);
+    }
+
+    function startScanner() {
+      document.getElementById('start-btn').classList.add('hidden');
+      document.getElementById('stop-btn').classList.remove('hidden');
+      scanner = new Html5Qrcode("reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          // Extract token from URL if needed
+          const match = decodedText.match(/\/admin\/scan\/([a-f0-9-]+)/);
+          const token = match ? match[1] : decodedText;
+          stopScanner();
+          validateToken(token);
+        },
+        () => {}
+      );
+    }
+
+    function stopScanner() {
+      if (scanner) {
+        scanner.stop().catch(() => {});
+        scanner = null;
+      }
+      document.getElementById('start-btn').classList.remove('hidden');
+      document.getElementById('stop-btn').classList.add('hidden');
+    }
+
+    document.getElementById('manual-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const token = document.getElementById('manual-token').value.trim();
+      if (token) validateToken(token);
+    });
+  </script>
+</body>
+</html>

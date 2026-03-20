@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Admin — Festival</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/admin/dashboard" class="nav-brand">🎪 Admin</a>
+    <div class="nav-links">
+      <a href="/logout" class="btn-outline">Déconnexion</a>
+    </div>
+  </nav>
+  <main class="container">
+    <h1>Dashboard</h1>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-number">{{ total_users }}</span>
+        <span class="stat-label">Inscrits</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ ticket_count }}</span>
+        <span class="stat-label">Billets achetés</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ scanned_count }}</span>
+        <span class="stat-label">Entrées validées</span>
+      </div>
+    </div>
+
+    <div class="admin-actions">
+      <a href="/admin/entry" class="admin-action-card">
+        <span class="action-icon">🎟️</span>
+        <span>Scanner entrée</span>
+      </a>
+      <a href="/admin/bar" class="admin-action-card">
+        <span class="action-icon">🍺</span>
+        <span>Interface bar</span>
+      </a>
+      <a href="/admin/drinks" class="admin-action-card">
+        <span class="action-icon">📋</span>
+        <span>Gérer les boissons</span>
+      </a>
+    </div>
+  </main>
+</body>
+</html>

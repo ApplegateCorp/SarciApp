@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Connexion — Sarcitopia{% endblock %}
+{% block content %}
+<div class="form-page">
+  <h1>Se connecter</h1>
+
+  {% if error %}
+  <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/login" class="card-form">
+    <label>Email
+      <input type="email" name="email" required autofocus />
+    </label>
+    <label>Mot de passe
+      <input type="password" name="password" required />
+    </label>
+    <button type="submit" class="btn-primary btn-full">Se connecter</button>
+  </form>
+
+  <p class="form-footer">Pas encore de compte ? <a href="/register">S'inscrire</a></p>
+</div>
+{% endblock %}
