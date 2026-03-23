@@ -223,3 +223,34 @@ async def toggle_drink(
         drink.available = not drink.available
         db.commit()
     return RedirectResponse("/admin/drinks", status_code=302)
+
+
+@router.post("/drinks/{drink_id}/edit")
+async def edit_drink(
+    drink_id: int,
+    name: str = Form(...),
+    price: float = Form(...),
+    emoji: str = Form(default="🍺"),
+    admin: models.User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    drink = db.query(models.DrinkItem).filter(models.DrinkItem.id == drink_id).first()
+    if drink:
+        drink.name = name.strip()
+        drink.price_cents = int(price * 100)
+        drink.emoji = emoji
+        db.commit()
+    return RedirectResponse("/admin/drinks", status_code=302)
+
+
+@router.post("/drinks/{drink_id}/delete")
+async def delete_drink(
+    drink_id: int,
+    admin: models.User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    drink = db.query(models.DrinkItem).filter(models.DrinkItem.id == drink_id).first()
+    if drink:
+        db.delete(drink)
+        db.commit()
+    return RedirectResponse("/admin/drinks", status_code=302)

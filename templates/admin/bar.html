@@ -2,187 +2,625 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bar — Festival</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Bar — Sarcitopia</title>
   <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    /* ── Fullscreen overlays ─────────────────────────── */
+    .overlay-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .overlay-screen.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .overlay-success {
+      background: #1a7a3a;
+    }
+    .overlay-error {
+      background: #b91c1c;
+    }
+    .overlay-icon {
+      font-size: 6rem;
+      line-height: 1;
+    }
+    .overlay-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      padding: 0 20px;
+    }
+    .overlay-detail {
+      font-size: 1.15rem;
+      color: rgba(255,255,255,0.85);
+      text-align: center;
+      padding: 0 20px;
+      max-width: 400px;
+    }
+
+    /* ── Cart sticky bar ─────────────────────────────── */
+    .cart-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--brown);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 200;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+      transform: translateY(100%);
+      transition: transform 0.25s ease;
+    }
+    .cart-bar.visible {
+      transform: translateY(0);
+    }
+    .cart-info {
+      color: var(--cream);
+      font-size: 0.95rem;
+    }
+    .cart-total {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--yellow);
+    }
+    .cart-items-count {
+      font-size: 0.82rem;
+      color: rgba(245,239,224,0.6);
+    }
+    .cart-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .cart-btn-clear {
+      background: none;
+      border: 1.5px solid rgba(245,239,224,0.3);
+      color: var(--cream);
+      padding: 8px 14px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .cart-btn-scan {
+      background: var(--orange);
+      border: none;
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cart-btn-scan:active { background: var(--primary-dark); }
+
+    /* ── Drink grid tweaks ───────────────────────────── */
+    .bar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .bar-header h1 {
+      font-size: 1.6rem;
+      margin: 0;
+    }
+
+    .drink-btn {
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .drink-btn:active {
+      transform: scale(0.95);
+    }
+    .drink-qty-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--orange);
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 700;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(244,99,42,0.35);
+    }
+
+    /* ── Cart detail panel ───────────────────────────── */
+    .cart-detail {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-top: 20px;
+      margin-bottom: 100px;
+    }
+    .cart-detail h3 {
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+    .cart-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.92rem;
+    }
+    .cart-line:last-of-type { border-bottom: none; }
+    .cart-line-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .cart-line-qty {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--cream);
+      color: var(--text);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .qty-btn:active { background: var(--surface2); }
+
+    /* ── Scan view ───────────────────────────────────── */
+    .scan-view {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .scan-view.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .scan-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: var(--brown);
+    }
+    .scan-header span {
+      color: var(--cream);
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .scan-back {
+      background: none;
+      border: 1.5px solid rgba(245,239,224,0.3);
+      color: var(--cream);
+      padding: 6px 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .scan-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      gap: 16px;
+    }
+    .scan-total-preview {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: var(--orange);
+    }
+    .scan-total-label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+    #bar-reader {
+      width: 100%;
+      max-width: 350px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+    }
+    .scan-manual {
+      margin-top: 12px;
+      width: 100%;
+      max-width: 350px;
+    }
+    .scan-manual summary {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      cursor: pointer;
+      text-align: center;
+    }
+    .scan-manual-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .scan-manual-form input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      background: var(--surface);
+    }
+    .scan-manual-form button {
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* Add bottom padding when cart is visible */
+    body.cart-open { padding-bottom: 90px; }
+  </style>
 </head>
 <body>
   <nav class="navbar">
-    <a href="/admin/dashboard" class="nav-brand">← Dashboard</a>
+    <a href="/admin/dashboard" class="nav-brand">← Admin</a>
     <span class="nav-brand">🍺 Bar</span>
   </nav>
+
   <main class="container">
-
-    <div id="result-box" class="result-box hidden"></div>
-
-    <!-- Step 1: Select drinks -->
-    <div id="step-drinks">
-      <h2>1. Sélectionner les boissons</h2>
-      <div class="drinks-grid">
-        {% for drink in drinks %}
-        <button class="drink-btn" data-id="{{ drink.id }}" data-name="{{ drink.name }}" data-price="{{ drink.price_cents }}" onclick="addDrink(this)">
-          <span class="drink-emoji">{{ drink.emoji }}</span>
-          <span class="drink-name">{{ drink.name }}</span>
-          <span class="drink-price">{{ "%.2f"|format(drink.price_cents / 100) }} €</span>
-        </button>
-        {% endfor %}
-      </div>
-
-      <div id="order-summary" class="order-summary hidden">
-        <h3>Commande</h3>
-        <div id="order-items"></div>
-        <div class="order-total">
-          Total : <strong id="order-total">0.00 €</strong>
-        </div>
-        <div class="order-actions">
-          <button class="btn-outline" onclick="clearOrder()">Annuler</button>
-          <button class="btn-primary" onclick="goToScan()">Scanner le QR →</button>
-        </div>
-      </div>
+    <div class="bar-header">
+      <h1>Menu</h1>
     </div>
 
-    <!-- Step 2: Scan QR -->
-    <div id="step-scan" class="hidden">
-      <h2>2. Scanner le QR code du client</h2>
-      <div id="bar-reader"></div>
-      <button class="btn-primary btn-full" onclick="startBarScanner()">Démarrer le scanner</button>
-      <button class="btn-outline btn-full" onclick="backToDrinks()" style="margin-top:8px">← Retour</button>
+    <!-- Drink buttons -->
+    <div class="drinks-grid" id="drinks-grid">
+      {% for drink in drinks %}
+      <button class="drink-btn"
+              data-id="{{ drink.id }}"
+              data-name="{{ drink.name }}"
+              data-price="{{ drink.price_cents }}"
+              data-emoji="{{ drink.emoji }}"
+              onclick="addDrink(this)">
+        <span class="drink-emoji">{{ drink.emoji }}</span>
+        <span class="drink-name">{{ drink.name }}</span>
+        <span class="drink-price">{{ "%.2f"|format(drink.price_cents / 100) }} €</span>
+      </button>
+      {% endfor %}
+    </div>
 
-      <details class="manual-entry" style="margin-top:16px">
-        <summary>Saisie manuelle</summary>
-        <form id="bar-manual-form" class="card-form" style="margin-top:12px">
+    <!-- Cart detail (visible when items in cart) -->
+    <div id="cart-detail" class="cart-detail" style="display:none;">
+      <h3>Commande en cours</h3>
+      <div id="cart-lines"></div>
+    </div>
+  </main>
+
+  <!-- Sticky bottom cart bar -->
+  <div id="cart-bar" class="cart-bar">
+    <div class="cart-info">
+      <div class="cart-total" id="cart-total-display">0.00 €</div>
+      <div class="cart-items-count" id="cart-count-display">0 articles</div>
+    </div>
+    <div class="cart-actions">
+      <button class="cart-btn-clear" onclick="clearOrder()">Vider</button>
+      <button class="cart-btn-scan" onclick="openScanner()">
+        📷 Scanner
+      </button>
+    </div>
+  </div>
+
+  <!-- Full-screen scan view -->
+  <div id="scan-view" class="scan-view">
+    <div class="scan-header">
+      <button class="scan-back" onclick="closeScanner()">← Retour</button>
+      <span>Scanner QR</span>
+    </div>
+    <div class="scan-body">
+      <div class="scan-total-label">Total de la commande</div>
+      <div class="scan-total-preview" id="scan-total">0.00 €</div>
+      <div id="bar-reader"></div>
+      <button class="btn-primary btn-full" onclick="startBarScanner()" id="btn-start-scan" style="max-width:350px;">
+        Lancer la cam&eacute;ra
+      </button>
+      <details class="scan-manual">
+        <summary>Saisie manuelle du token</summary>
+        <div class="scan-manual-form">
           <input type="text" id="bar-manual-token" placeholder="Token QR" />
-          <button type="submit" class="btn-primary btn-full">Valider</button>
-        </form>
+          <button onclick="manualCharge()">OK</button>
+        </div>
       </details>
     </div>
+  </div>
 
-  </main>
+  <!-- SUCCESS overlay (green) -->
+  <div id="overlay-success" class="overlay-screen overlay-success">
+    <div class="overlay-icon">✅</div>
+    <div class="overlay-title" id="success-title">Paiement validé !</div>
+    <div class="overlay-detail" id="success-detail"></div>
+  </div>
+
+  <!-- ERROR overlay (red) -->
+  <div id="overlay-error" class="overlay-screen overlay-error">
+    <div class="overlay-icon">❌</div>
+    <div class="overlay-title" id="error-title">Solde insuffisant</div>
+    <div class="overlay-detail" id="error-detail"></div>
+  </div>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script>
-    // Order state
-    let order = {}; // { drink_id: { name, price_cents, qty } }
+    // ── State ──────────────────────────────────────────
+    let order = {}; // { drink_id: { name, emoji, price_cents, qty } }
     let barScanner = null;
+    let processing = false;
 
+    // ── Add / remove drinks ────────────────────────────
     function addDrink(btn) {
       const id = btn.dataset.id;
       if (order[id]) {
         order[id].qty += 1;
       } else {
-        order[id] = { name: btn.dataset.name, price_cents: parseInt(btn.dataset.price), qty: 1 };
+        order[id] = {
+          name: btn.dataset.name,
+          emoji: btn.dataset.emoji,
+          price_cents: parseInt(btn.dataset.price),
+          qty: 1
+        };
       }
-      renderOrder();
+      renderAll();
+      // Haptic feedback if available
+      if (navigator.vibrate) navigator.vibrate(30);
     }
 
-    function removeDrink(id) {
-      if (order[id]) {
-        order[id].qty -= 1;
-        if (order[id].qty <= 0) delete order[id];
-      }
-      renderOrder();
+    function changeQty(id, delta) {
+      if (!order[id]) return;
+      order[id].qty += delta;
+      if (order[id].qty <= 0) delete order[id];
+      renderAll();
     }
 
     function clearOrder() {
       order = {};
-      renderOrder();
+      renderAll();
     }
 
-    function renderOrder() {
-      const items = Object.entries(order);
-      const summary = document.getElementById('order-summary');
-      const itemsEl = document.getElementById('order-items');
-      const totalEl = document.getElementById('order-total');
-
-      if (items.length === 0) {
-        summary.classList.add('hidden');
-        return;
-      }
-
-      summary.classList.remove('hidden');
+    // ── Compute total ──────────────────────────────────
+    function getTotal() {
       let total = 0;
-      itemsEl.innerHTML = items.map(([id, item]) => {
-        const subtotal = item.price_cents * item.qty;
-        total += subtotal;
-        return `<div class="order-item">
-          <span>${item.qty}x ${item.name}</span>
-          <span>
-            ${(subtotal / 100).toFixed(2)} €
-            <button onclick="removeDrink('${id}')" class="remove-btn">−</button>
-          </span>
-        </div>`;
-      }).join('');
-      totalEl.textContent = (total / 100).toFixed(2) + ' €';
-    }
-
-    function goToScan() {
-      if (Object.keys(order).length === 0) return;
-      document.getElementById('step-drinks').classList.add('hidden');
-      document.getElementById('step-scan').classList.remove('hidden');
-    }
-
-    function backToDrinks() {
-      stopBarScanner();
-      document.getElementById('step-scan').classList.add('hidden');
-      document.getElementById('step-drinks').classList.remove('hidden');
-    }
-
-    function showResult(ok, message) {
-      const box = document.getElementById('result-box');
-      box.className = 'result-box ' + (ok ? 'result-ok' : 'result-error');
-      box.textContent = message;
-      box.classList.remove('hidden');
-      if (ok) {
-        clearOrder();
-        backToDrinks();
+      for (const item of Object.values(order)) {
+        total += item.price_cents * item.qty;
       }
-      setTimeout(() => box.classList.add('hidden'), 6000);
+      return total;
     }
 
-    async function chargeToken(token) {
-      const drinkIds = [];
-      for (const [id, item] of Object.entries(order)) {
-        for (let i = 0; i < item.qty; i++) drinkIds.push(parseInt(id));
+    function getItemCount() {
+      let count = 0;
+      for (const item of Object.values(order)) {
+        count += item.qty;
       }
-      const res = await fetch('/admin/charge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, drink_ids: drinkIds }),
+      return count;
+    }
+
+    // ── Render everything ──────────────────────────────
+    function renderAll() {
+      const total = getTotal();
+      const count = getItemCount();
+      const hasItems = count > 0;
+
+      // Cart bar
+      const cartBar = document.getElementById('cart-bar');
+      document.getElementById('cart-total-display').textContent = (total / 100).toFixed(2) + ' €';
+      document.getElementById('cart-count-display').textContent = count + ' article' + (count > 1 ? 's' : '');
+      if (hasItems) {
+        cartBar.classList.add('visible');
+        document.body.classList.add('cart-open');
+      } else {
+        cartBar.classList.remove('visible');
+        document.body.classList.remove('cart-open');
+      }
+
+      // Quantity badges on drink buttons
+      document.querySelectorAll('.drink-btn').forEach(btn => {
+        const id = btn.dataset.id;
+        let badge = btn.querySelector('.drink-qty-badge');
+        if (order[id] && order[id].qty > 0) {
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'drink-qty-badge';
+            btn.appendChild(badge);
+          }
+          badge.textContent = order[id].qty;
+        } else if (badge) {
+          badge.remove();
+        }
       });
-      const data = await res.json();
-      showResult(data.ok, data.ok
-        ? `✅ ${data.message}\nSolde restant : ${data.new_balance.toFixed(2)} €`
-        : `❌ ${data.error}`
-      );
+
+      // Cart detail
+      const cartDetail = document.getElementById('cart-detail');
+      const cartLines = document.getElementById('cart-lines');
+      if (hasItems) {
+        cartDetail.style.display = 'block';
+        let html = '';
+        for (const [id, item] of Object.entries(order)) {
+          const subtotal = (item.price_cents * item.qty / 100).toFixed(2);
+          html += `
+            <div class="cart-line">
+              <div class="cart-line-left">
+                <span>${item.emoji} ${item.name}</span>
+              </div>
+              <div class="cart-line-qty">
+                <button class="qty-btn" onclick="changeQty('${id}', -1)">−</button>
+                <span>${item.qty}</span>
+                <button class="qty-btn" onclick="changeQty('${id}', 1)">+</button>
+                <span style="min-width:65px; text-align:right; font-weight:600;">${subtotal} €</span>
+              </div>
+            </div>`;
+        }
+        cartLines.innerHTML = html;
+      } else {
+        cartDetail.style.display = 'none';
+      }
+
+      // Scan view total
+      document.getElementById('scan-total').textContent = (total / 100).toFixed(2) + ' €';
+    }
+
+    // ── Scanner ────────────────────────────────────────
+    function openScanner() {
+      if (getItemCount() === 0) return;
+      document.getElementById('scan-view').classList.add('visible');
+    }
+
+    function closeScanner() {
+      stopBarScanner();
+      document.getElementById('scan-view').classList.remove('visible');
     }
 
     function startBarScanner() {
+      const btn = document.getElementById('btn-start-scan');
+      btn.textContent = 'Scanner actif...';
+      btn.disabled = true;
+
       barScanner = new Html5Qrcode("bar-reader");
       barScanner.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 250, height: 250 } },
         (decodedText) => {
+          if (processing) return;
           const match = decodedText.match(/\/admin\/scan\/([a-f0-9-]+)/);
           const token = match ? match[1] : decodedText;
           stopBarScanner();
           chargeToken(token);
         },
         () => {}
-      );
+      ).catch(() => {
+        btn.textContent = 'Lancer la caméra';
+        btn.disabled = false;
+      });
     }
 
     function stopBarScanner() {
+      const btn = document.getElementById('btn-start-scan');
+      btn.textContent = 'Lancer la caméra';
+      btn.disabled = false;
       if (barScanner) {
         barScanner.stop().catch(() => {});
         barScanner = null;
       }
     }
 
-    document.getElementById('bar-manual-form').addEventListener('submit', (e) => {
-      e.preventDefault();
+    function manualCharge() {
       const token = document.getElementById('bar-manual-token').value.trim();
-      if (token) chargeToken(token);
-    });
+      if (token && !processing) chargeToken(token);
+    }
+
+    // ── Charge (API call) ──────────────────────────────
+    async function chargeToken(token) {
+      if (processing) return;
+      processing = true;
+
+      const drinkIds = [];
+      for (const [id, item] of Object.entries(order)) {
+        for (let i = 0; i < item.qty; i++) drinkIds.push(parseInt(id));
+      }
+
+      try {
+        const res = await fetch('/admin/charge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, drink_ids: drinkIds }),
+        });
+        const data = await res.json();
+
+        // Close scanner view first
+        document.getElementById('scan-view').classList.remove('visible');
+
+        if (data.ok) {
+          // ✅ SUCCESS → green screen 3 seconds → clear cart → back to menu
+          document.getElementById('success-title').textContent = 'Paiement validé !';
+          document.getElementById('success-detail').textContent =
+            data.description + '\n' + data.message + '\nSolde restant : ' + data.new_balance.toFixed(2) + ' €';
+          showOverlay('overlay-success', () => {
+            clearOrder();
+          });
+        } else {
+          // ❌ ERROR → red screen 3 seconds → back to cart (keep items)
+          document.getElementById('error-title').textContent = 'Solde insuffisant';
+          document.getElementById('error-detail').textContent = data.error;
+          showOverlay('overlay-error', () => {
+            // Cart stays as-is, user is back on menu view
+          });
+        }
+      } catch (err) {
+        document.getElementById('scan-view').classList.remove('visible');
+        document.getElementById('error-title').textContent = 'Erreur';
+        document.getElementById('error-detail').textContent = 'Erreur de connexion. Réessayez.';
+        showOverlay('overlay-error', () => {});
+      }
+
+      processing = false;
+    }
+
+    // ── Overlay display ────────────────────────────────
+    function showOverlay(id, callback) {
+      const el = document.getElementById(id);
+      el.classList.add('visible');
+      // Vibrate on error
+      if (id === 'overlay-error' && navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+      }
+      setTimeout(() => {
+        el.classList.remove('visible');
+        if (callback) callback();
+      }, 3000);
+    }
+
+    // ── Init ───────────────────────────────────────────
+    renderAll();
   </script>
 </body>
 </html>
