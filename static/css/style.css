@@ -384,9 +384,15 @@ input:focus { border-color: var(--primary); }
 /* ── Admin stats ──────────────────────────────────────────────────────────── */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
   margin: 24px 0;
+}
+@media (min-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 640px) {
+  .stats-grid { grid-template-columns: repeat(5, 1fr); }
 }
 .stat-card {
   background: var(--surface);
@@ -401,23 +407,32 @@ input:focus { border-color: var(--primary); }
 
 .admin-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-top: 8px;
+}
+@media (min-width: 520px) {
+  .admin-actions { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 768px) {
+  .admin-actions { grid-template-columns: repeat(4, 1fr); }
 }
 .admin-action-card {
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
-  padding: 26px 16px;
+  padding: 22px 12px;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
   color: var(--text);
   text-decoration: none;
   transition: border-color 0.15s, box-shadow 0.15s;
   box-shadow: 0 2px 10px rgba(46,26,14,0.04);
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 .admin-action-card:hover { border-color: var(--primary); box-shadow: 0 4px 18px rgba(244,99,42,0.12); text-decoration: none; }
 .action-icon { font-size: 2.2rem; }
@@ -457,9 +472,15 @@ input:focus { border-color: var(--primary); }
 /* ── Bar ──────────────────────────────────────────────────────────────────── */
 .drinks-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin: 16px 0;
+}
+@media (min-width: 420px) {
+  .drinks-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 640px) {
+  .drinks-grid { grid-template-columns: repeat(4, 1fr); }
 }
 .drink-btn {
   background: var(--surface);
@@ -933,7 +954,7 @@ footer { background: var(--surface); border-top: 1.5px solid var(--border); padd
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
-  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .stat-number { font-size: 1.6rem; }
+  .stat-number { font-size: 1.4rem; }
+  .stat-card { padding: 14px 8px; }
   .hero h1 { font-size: 2.2rem; }
 }
