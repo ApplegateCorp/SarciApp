@@ -85,3 +85,9 @@ def require_admin(user: models.User = Depends(get_current_user)) -> models.User:
     if not user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
     return user
+
+
+def require_bartender_or_admin(user: models.User = Depends(get_current_user)) -> models.User:
+    if not user.is_admin and not user.is_bartender:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bartender or admin only")
+    return user

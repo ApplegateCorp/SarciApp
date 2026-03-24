@@ -39,9 +39,19 @@ async def register(
     email = email.lower().strip()
     existing = db.query(models.User).filter(models.User.email == email).first()
     if existing:
+        # If the account was pre-created by admin (bartender), let them claim it
+        if existing.is_bartender and not existing.ticket_purchased:
+            existing.name = name.strip()
+            existing.password_hash = hash_password(password)
+            db.commit()
+            db.refresh(existing)
+            response = RedirectResponse("/ticket", status_code=302)
+            token = create_access_token(existing.id)
+            response.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=60 * 60 * 24 * 7)
+            return response
         return templates.TemplateResponse(
             "register.html",
-            {"request": request, "error": "An account already exists with this email."},
+            {"request": request, "error": "Un compte existe d\u00e9j\u00e0 avec cet email."},
             status_code=400,
         )
     user = models.User(name=name.strip(), email=email, password_hash=hash_password(password))

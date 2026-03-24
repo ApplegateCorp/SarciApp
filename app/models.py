@@ -26,6 +26,7 @@ class User(Base):
     balance_cents = Column(Integer, default=0)
 
     is_admin = Column(Boolean, default=False)
+    is_bartender = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     transactions = relationship("Transaction", back_populates="user")

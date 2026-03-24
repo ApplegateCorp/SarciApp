@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models
-from app.auth import require_admin, get_current_user_optional, verify_password, create_access_token
+from app.auth import require_admin, require_bartender_or_admin, get_current_user_optional, verify_password, create_access_token
 from app.config import ADMIN_PASSWORD
 
 router = APIRouter(prefix="/admin")
@@ -109,13 +109,13 @@ async def validate_entry(
 @router.get("/bar", response_class=HTMLResponse)
 async def bar_page(
     request: Request,
-    admin: models.User = Depends(require_admin),
+    user: models.User = Depends(require_bartender_or_admin),
     db: Session = Depends(get_db),
 ):
     drinks = db.query(models.DrinkItem).filter(models.DrinkItem.available == True).all()
     return templates.TemplateResponse("admin/bar.html", {
         "request": request,
-        "admin": admin,
+        "admin": user,
         "drinks": drinks,
     })
 
@@ -124,7 +124,7 @@ async def bar_page(
 async def charge(
     request: Request,
     db: Session = Depends(get_db),
-    admin: models.User = Depends(require_admin),
+    admin: models.User = Depends(require_bartender_or_admin),
 ):
     """Receive a JSON payload with token + list of drink IDs, deduct from balance."""
     body = await request.json()
@@ -254,3 +254,63 @@ async def delete_drink(
         db.delete(drink)
         db.commit()
     return RedirectResponse("/admin/drinks", status_code=302)
+
+
+# ── Bartender management ─────────────────────────────────────────────────────
+
+@router.get("/bartenders", response_class=HTMLResponse)
+async def bartenders_page(
+    request: Request,
+    admin: models.User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    bartenders = db.query(models.User).filter(models.User.is_bartender == True).all()
+    return templates.TemplateResponse("admin/bartenders.html", {
+        "request": request,
+        "admin": admin,
+        "bartenders": bartenders,
+    })
+
+
+@router.post("/bartenders/add")
+async def add_bartender(
+    name: str = Form(...),
+    email: str = Form(...),
+    admin: models.User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    email = email.lower().strip()
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if user:
+        # User already exists — just grant bartender role
+        user.is_bartender = True
+        if not user.name or user.name == "":
+            user.name = name.strip()
+        db.commit()
+    else:
+        # Create a placeholder account — bartender will set password when they register
+        # For now, flag the email so when they register they auto-get bartender role
+        from app.auth import hash_password
+        import secrets
+        user = models.User(
+            name=name.strip(),
+            email=email,
+            password_hash=hash_password(secrets.token_urlsafe(16)),  # temp password
+            is_bartender=True,
+        )
+        db.add(user)
+        db.commit()
+    return RedirectResponse("/admin/bartenders", status_code=302)
+
+
+@router.post("/bartenders/{user_id}/remove")
+async def remove_bartender(
+    user_id: int,
+    admin: models.User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if user:
+        user.is_bartender = False
+        db.commit()
+    return RedirectResponse("/admin/bartenders", status_code=302)

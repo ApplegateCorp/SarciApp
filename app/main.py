@@ -1,4 +1,5 @@
 import os
+from sqlalchemy import text, inspect
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,6 +12,18 @@ app = FastAPI(title="Sarcitopia")
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
+
+# ── Lightweight migrations (no alembic needed for small projects) ────────────
+def _run_migrations():
+    """Add missing columns to existing tables."""
+    inspector = inspect(engine)
+    if "users" in inspector.get_table_names():
+        columns = [col["name"] for col in inspector.get_columns("users")]
+        with engine.begin() as conn:
+            if "is_bartender" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN is_bartender BOOLEAN DEFAULT FALSE"))
+
+_run_migrations()
 
 # Auto-seed admin + drinks on first run
 def _auto_seed():
