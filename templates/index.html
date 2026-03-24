@@ -53,6 +53,8 @@
         <p>Achetez en ligne, recevez votre QR code par email. Présentez-le à l'entrée.</p>
         {% if not user %}
         <a href="/register" class="btn-feature">Acheter →</a>
+        {% elif not user.ticket_purchased %}
+        <a href="/ticket" class="btn-feature">Acheter →</a>
         {% endif %}
       </div>
 
@@ -104,7 +106,11 @@
   <div class="footer-inner">
     <span class="footer-logo">✦ SARCITOPIA</span>
     <span class="footer-tagline">La Prairie des Merveilles &nbsp;·&nbsp; by @sarcirecords &amp; friends</span>
+    {% if user and user.ticket_purchased %}
+    <a href="/wallet" class="footer-cta">Recharger son compte →</a>
+    {% else %}
     <a href="/register" class="footer-cta">Acheter un billet →</a>
+    {% endif %}
   </div>
 </footer>
 
