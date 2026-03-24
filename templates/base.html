@@ -20,6 +20,9 @@
       {% if user %}
         <a href="/ticket" class="nav-link-subtle">Mon billet</a>
         <a href="/wallet" class="nav-link-subtle">Compte</a>
+        {% if user.ticket_scanned %}
+        <a href="/history" class="nav-link-subtle">Historique</a>
+        {% endif %}
         {% if user.is_bartender or user.is_admin or user.is_sub_admin %}
         <a href="/admin/bar" class="nav-cta" style="background:var(--green); border-color:var(--green);">🍺 Bar</a>
         {% endif %}

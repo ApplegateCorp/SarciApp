@@ -65,3 +65,43 @@ async def create_topup_session(
         metadata={"type": "topup", "user_id": str(user.id), "amount_cents": str(amount * 100)},
     )
     return JSONResponse({"clientSecret": session.client_secret})
+
+
+@router.get("/history", response_class=HTMLResponse)
+async def history_page(
+    request: Request,
+    user: models.User = Depends(get_current_user_or_redirect),
+    db: Session = Depends(get_db),
+):
+    """Full order history for a user — grouped by drink orders."""
+    # Get all drink transactions
+    drink_txs = (
+        db.query(models.Transaction)
+        .filter(models.Transaction.user_id == user.id, models.Transaction.type == "drink")
+        .order_by(models.Transaction.created_at.desc())
+        .all()
+    )
+
+    # Get all transactions for summary
+    all_txs = (
+        db.query(models.Transaction)
+        .filter(models.Transaction.user_id == user.id)
+        .order_by(models.Transaction.created_at.desc())
+        .all()
+    )
+
+    # Calculate totals
+    total_spent_bar = sum(abs(tx.amount_cents) for tx in drink_txs)
+    total_orders = len(drink_txs)
+    total_recharged = sum(tx.amount_cents for tx in all_txs if tx.type == "topup")
+
+    return templates.TemplateResponse("history.html", {
+        "request": request,
+        "user": user,
+        "drink_orders": drink_txs,
+        "all_transactions": all_txs,
+        "total_spent_bar": total_spent_bar / 100,
+        "total_orders": total_orders,
+        "total_recharged": total_recharged / 100,
+        "balance": user.balance_cents / 100,
+    })
