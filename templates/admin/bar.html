@@ -31,6 +31,9 @@
     .overlay-error {
       background: #b91c1c;
     }
+    .overlay-warning {
+      background: #d97706;
+    }
     .overlay-icon {
       font-size: 6rem;
       line-height: 1;
@@ -391,6 +394,13 @@
     <div class="overlay-detail" id="error-detail"></div>
   </div>
 
+  <!-- WARNING overlay (orange) — ticket not validated -->
+  <div id="overlay-warning" class="overlay-screen overlay-warning">
+    <div class="overlay-icon">⚠️</div>
+    <div class="overlay-title">Billet non valid&eacute;</div>
+    <div class="overlay-detail">Le spectateur doit d'abord valider son billet &agrave; l'entr&eacute;e du festival.</div>
+  </div>
+
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script>
     // ── State ──────────────────────────────────────────
@@ -581,19 +591,20 @@
 
         if (data.ok) {
           // ✅ SUCCESS → green screen 3 seconds → clear cart → back to menu
-          document.getElementById('success-title').textContent = 'Paiement validé !';
+          document.getElementById('success-title').textContent = 'Paiement valid\u00e9 !';
           document.getElementById('success-detail').textContent =
-            data.description + '\n' + data.message + '\nSolde restant : ' + data.new_balance.toFixed(2) + ' €';
+            data.description + '\n' + data.message + '\nSolde restant : ' + data.new_balance.toFixed(2) + ' \u20ac';
           showOverlay('overlay-success', () => {
             clearOrder();
           });
+        } else if (data.error_type === 'ticket_not_validated') {
+          // ⚠️ WARNING → orange screen 3 seconds → back to cart
+          showOverlay('overlay-warning', () => {});
         } else {
           // ❌ ERROR → red screen 3 seconds → back to cart (keep items)
           document.getElementById('error-title').textContent = 'Solde insuffisant';
           document.getElementById('error-detail').textContent = data.error;
-          showOverlay('overlay-error', () => {
-            // Cart stays as-is, user is back on menu view
-          });
+          showOverlay('overlay-error', () => {});
         }
       } catch (err) {
         document.getElementById('scan-view').classList.remove('visible');

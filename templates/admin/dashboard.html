@@ -3,37 +3,55 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Admin — Festival</title>
+  <title>Dashboard Admin — Sarcitopia</title>
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body>
   <nav class="navbar">
     <a href="/admin/dashboard" class="nav-brand">🎪 Admin</a>
     <div class="nav-links">
-      <a href="/logout" class="btn-outline">Déconnexion</a>
+      <a href="/" class="nav-link-subtle">Site</a>
+      <a href="/logout" class="btn-outline" style="padding:4px 14px; font-size:0.82rem;">D&eacute;connexion</a>
     </div>
   </nav>
   <main class="container">
     <h1>Dashboard</h1>
-    <div class="stats-grid">
+
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
       <div class="stat-card">
         <span class="stat-number">{{ total_users }}</span>
         <span class="stat-label">Inscrits</span>
       </div>
       <div class="stat-card">
         <span class="stat-number">{{ ticket_count }}</span>
-        <span class="stat-label">Billets achetés</span>
+        <span class="stat-label">Billets</span>
       </div>
       <div class="stat-card">
         <span class="stat-number">{{ scanned_count }}</span>
-        <span class="stat-label">Entrées validées</span>
+        <span class="stat-label">Valid&eacute;s</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ "%.0f"|format(ticket_revenue) }}&euro;</span>
+        <span class="stat-label">CA Billets</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ "%.0f"|format(bar_revenue) }}&euro;</span>
+        <span class="stat-label">CA Bar</span>
       </div>
     </div>
 
     <div class="admin-actions">
+      <a href="/admin/accounts" class="admin-action-card">
+        <span class="action-icon">👥</span>
+        <span>Tous les comptes</span>
+      </a>
+      <a href="/admin/analytics" class="admin-action-card">
+        <span class="action-icon">📊</span>
+        <span>Analytics</span>
+      </a>
       <a href="/admin/entry" class="admin-action-card">
         <span class="action-icon">🎟️</span>
-        <span>Scanner entrée</span>
+        <span>Scanner entr&eacute;e</span>
       </a>
       <a href="/admin/bar" class="admin-action-card">
         <span class="action-icon">🍺</span>
@@ -41,11 +59,19 @@
       </a>
       <a href="/admin/drinks" class="admin-action-card">
         <span class="action-icon">📋</span>
-        <span>Gérer les boissons</span>
+        <span>Menu boissons</span>
       </a>
       <a href="/admin/bartenders" class="admin-action-card">
-        <span class="action-icon">🍺</span>
-        <span>Gérer les barmen</span>
+        <span class="action-icon">🍻</span>
+        <span>Barmen</span>
+      </a>
+      <a href="/admin/scanners" class="admin-action-card">
+        <span class="action-icon">🎫</span>
+        <span>Scanners entr&eacute;e</span>
+      </a>
+      <a href="/admin/sub-admins" class="admin-action-card">
+        <span class="action-icon">👑</span>
+        <span>Co-organisateurs</span>
       </a>
     </div>
   </main>

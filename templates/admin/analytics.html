@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics — Sarcitopia Admin</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px; margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+      padding: 20px 14px; text-align: center; box-shadow: 0 2px 10px rgba(46,26,14,0.05);
+    }
+    .kpi-value {
+      display: block; font-size: 1.8rem; font-weight: 900; color: var(--primary);
+      font-family: 'Playfair Display', serif;
+    }
+    .kpi-label {
+      display: block; color: var(--text-muted); font-size: 0.75rem; margin-top: 4px;
+      font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .chart-card {
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+      padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(46,26,14,0.05);
+    }
+    .chart-card h3 { font-size: 1.1rem; margin-bottom: 16px; }
+    .chart-container { position: relative; width: 100%; max-height: 300px; }
+    .loading-text { text-align: center; color: var(--text-muted); padding: 40px 0; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/admin/dashboard" class="nav-brand">&larr; Admin</a>
+    <span class="nav-brand">📊 Analytics</span>
+  </nav>
+  <main class="container" style="max-width:780px;">
+    <div class="page-header">
+      <h1>Analytics</h1>
+      <p>Vue d'ensemble de l'activit&eacute; du festival en temps r&eacute;el.</p>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-value" id="kpi-tickets">—</span>
+        <span class="kpi-label">Billets vendus</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-value" id="kpi-validated">—</span>
+        <span class="kpi-label">Billets valid&eacute;s</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-value" id="kpi-ticket-rev">—</span>
+        <span class="kpi-label">CA Billets</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-value" id="kpi-bar-rev">—</span>
+        <span class="kpi-label">CA Bar</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-value" id="kpi-topup">—</span>
+        <span class="kpi-label">Recharges</span>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-card">
+      <h3>Ventes par boisson</h3>
+      <div class="chart-container"><canvas id="chart-drinks"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Revenus bar par heure</h3>
+      <div class="chart-container"><canvas id="chart-bar-time"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Billets vendus par jour</h3>
+      <div class="chart-container"><canvas id="chart-tickets-time"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Recharges par heure</h3>
+      <div class="chart-container"><canvas id="chart-topup-time"></canvas></div>
+    </div>
+
+    <p class="loading-text" id="loading">Chargement des donn&eacute;es...</p>
+  </main>
+
+  <script>
+    const ORANGE = '#F4632A';
+    const GREEN = '#4A7C59';
+    const YELLOW = '#F5C842';
+    const SKY = '#6BBFCB';
+    const RED = '#C0392B';
+    const COLORS = [ORANGE, GREEN, YELLOW, SKY, RED, '#8E44AD', '#2563eb', '#d44e1a', '#16a085'];
+
+    async function loadAnalytics() {
+      const res = await fetch('/admin/analytics/data');
+      const d = await res.json();
+      document.getElementById('loading').style.display = 'none';
+
+      // KPIs
+      document.getElementById('kpi-tickets').textContent = d.ticket_count;
+      document.getElementById('kpi-validated').textContent = d.ticket_validated;
+      document.getElementById('kpi-ticket-rev').textContent = (d.ticket_revenue_cents / 100).toFixed(0) + ' \u20ac';
+      document.getElementById('kpi-bar-rev').textContent = (d.bar_revenue_cents / 100).toFixed(0) + ' \u20ac';
+      document.getElementById('kpi-topup').textContent = (d.topup_total_cents / 100).toFixed(0) + ' \u20ac';
+
+      // Drink sales bar chart
+      const drinkNames = Object.keys(d.drink_counts);
+      const drinkQtys = Object.values(d.drink_counts);
+      if (drinkNames.length > 0) {
+        new Chart(document.getElementById('chart-drinks'), {
+          type: 'bar',
+          data: {
+            labels: drinkNames,
+            datasets: [{
+              label: 'Unit\u00e9s vendues',
+              data: drinkQtys,
+              backgroundColor: COLORS.slice(0, drinkNames.length),
+              borderRadius: 8,
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+      }
+
+      // Bar revenue over time
+      const barHours = Object.keys(d.bar_by_hour).sort();
+      const barValues = barHours.map(h => d.bar_by_hour[h] / 100);
+      if (barHours.length > 0) {
+        new Chart(document.getElementById('chart-bar-time'), {
+          type: 'line',
+          data: {
+            labels: barHours.map(h => h.slice(5)),
+            datasets: [{
+              label: 'Revenus bar (\u20ac)',
+              data: barValues,
+              borderColor: ORANGE, backgroundColor: 'rgba(244,99,42,0.1)',
+              fill: true, tension: 0.3, borderWidth: 2, pointRadius: 3,
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+      }
+
+      // Tickets over time
+      const ticketDays = Object.keys(d.tickets_by_day).sort();
+      const ticketCounts = ticketDays.map(d2 => d.tickets_by_day[d2]);
+      if (ticketDays.length > 0) {
+        new Chart(document.getElementById('chart-tickets-time'), {
+          type: 'bar',
+          data: {
+            labels: ticketDays,
+            datasets: [{
+              label: 'Billets vendus',
+              data: ticketCounts,
+              backgroundColor: GREEN, borderRadius: 8,
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+      }
+
+      // Topup over time
+      const topupHours = Object.keys(d.topup_by_hour).sort();
+      const topupValues = topupHours.map(h => d.topup_by_hour[h] / 100);
+      if (topupHours.length > 0) {
+        new Chart(document.getElementById('chart-topup-time'), {
+          type: 'line',
+          data: {
+            labels: topupHours.map(h => h.slice(5)),
+            datasets: [{
+              label: 'Recharges (\u20ac)',
+              data: topupValues,
+              borderColor: SKY, backgroundColor: 'rgba(107,191,203,0.1)',
+              fill: true, tension: 0.3, borderWidth: 2, pointRadius: 3,
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+      }
+    }
+
+    loadAnalytics();
+  </script>
+</body>
+</html>

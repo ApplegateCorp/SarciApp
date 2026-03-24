@@ -22,6 +22,10 @@ def _run_migrations():
         with engine.begin() as conn:
             if "is_bartender" not in columns:
                 conn.execute(text("ALTER TABLE users ADD COLUMN is_bartender BOOLEAN DEFAULT FALSE"))
+            if "is_sub_admin" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN is_sub_admin BOOLEAN DEFAULT FALSE"))
+            if "is_scanner" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN is_scanner BOOLEAN DEFAULT FALSE"))
 
 _run_migrations()
 

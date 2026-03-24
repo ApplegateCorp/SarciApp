@@ -39,8 +39,8 @@ async def register(
     email = email.lower().strip()
     existing = db.query(models.User).filter(models.User.email == email).first()
     if existing:
-        # If the account was pre-created by admin (bartender), let them claim it
-        if existing.is_bartender and not existing.ticket_purchased:
+        # If the account was pre-created by admin (bartender/scanner/sub-admin), let them claim it
+        if (existing.is_bartender or existing.is_scanner or existing.is_sub_admin) and not existing.ticket_purchased:
             existing.name = name.strip()
             existing.password_hash = hash_password(password)
             db.commit()

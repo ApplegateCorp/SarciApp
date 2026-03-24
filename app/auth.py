@@ -82,12 +82,26 @@ def get_current_user_optional(
 
 
 def require_admin(user: models.User = Depends(get_current_user)) -> models.User:
+    """Only the root admin (not sub-admins)."""
     if not user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
     return user
 
 
+def require_admin_or_sub(user: models.User = Depends(get_current_user)) -> models.User:
+    """Admin or sub-admin — full dashboard access."""
+    if not user.is_admin and not user.is_sub_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin or sub-admin only")
+    return user
+
+
 def require_bartender_or_admin(user: models.User = Depends(get_current_user)) -> models.User:
-    if not user.is_admin and not user.is_bartender:
+    if not user.is_admin and not user.is_sub_admin and not user.is_bartender:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bartender or admin only")
+    return user
+
+
+def require_scanner_or_admin(user: models.User = Depends(get_current_user)) -> models.User:
+    if not user.is_admin and not user.is_sub_admin and not user.is_scanner:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Scanner or admin only")
     return user
