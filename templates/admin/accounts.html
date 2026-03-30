@@ -55,7 +55,22 @@
       font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.1rem;
       color: var(--success); white-space: nowrap;
     }
-    .account-right { text-align: right; }
+    .account-right { text-align: right; display: flex; align-items: center; gap: 8px; }
+    .btn-reset-link {
+      padding: 6px 10px; border-radius: var(--radius-sm); font-size: 0.72rem;
+      font-weight: 600; border: 1.5px solid var(--orange); background: #fff8ee;
+      color: var(--orange); cursor: pointer; white-space: nowrap; font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .btn-reset-link:hover { background: var(--orange); color: #fff; }
+    .btn-reset-link.copied { background: var(--success); border-color: var(--success); color: #fff; }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--brown); color: #fff; padding: 12px 24px; border-radius: 50px;
+      font-size: 0.88rem; font-weight: 600; z-index: 999; opacity: 0;
+      transition: opacity 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
   </style>
 </head>
 <body>
@@ -124,6 +139,7 @@
         </div>
       </div>
       <div class="account-right">
+        <button class="btn-reset-link" onclick="event.preventDefault();event.stopPropagation();genResetLink(this,{{ u.id }})">🔗 Lien MDP</button>
         <div class="account-balance">{{ "%.2f"|format(u.balance_cents / 100) }} &euro;</div>
       </div>
     </a>
@@ -131,5 +147,32 @@
     <p style="color:#888; text-align:center; margin-top:32px;">Aucun compte trouv&eacute;.</p>
     {% endfor %}
   </main>
+
+  <div class="toast" id="toast">Lien copié !</div>
+
+  <script>
+  async function genResetLink(btn, userId) {
+    btn.textContent = '⏳';
+    try {
+      const res = await fetch(`/admin/accounts/${userId}/reset-link`, {method:'POST'});
+      const data = await res.json();
+      if (data.ok) {
+        await navigator.clipboard.writeText(data.link);
+        btn.textContent = '✓ Copié';
+        btn.classList.add('copied');
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => { toast.classList.remove('show'); }, 2000);
+        setTimeout(() => { btn.textContent = '🔗 Lien MDP'; btn.classList.remove('copied'); }, 3000);
+      } else {
+        btn.textContent = '✗ Erreur';
+        setTimeout(() => { btn.textContent = '🔗 Lien MDP'; }, 2000);
+      }
+    } catch(e) {
+      btn.textContent = '✗ Erreur';
+      setTimeout(() => { btn.textContent = '🔗 Lien MDP'; }, 2000);
+    }
+  }
+  </script>
 </body>
 </html>

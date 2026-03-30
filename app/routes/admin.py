@@ -9,9 +9,9 @@ from app import models
 from app.auth import (
     require_admin, require_admin_or_sub, require_bartender_or_admin,
     require_scanner_or_admin, get_current_user_optional, verify_password,
-    create_access_token,
+    create_access_token, create_reset_token,
 )
-from app.config import ADMIN_PASSWORD
+from app.config import ADMIN_PASSWORD, BASE_URL
 from app.qr_utils import generate_qr_base64
 
 router = APIRouter(prefix="/admin")
@@ -201,6 +201,22 @@ async def validate_ticket_from_list(
         user.ticket_scanned = True
         db.commit()
     return RedirectResponse(f"/admin/accounts/{user_id}", status_code=302)
+
+
+# ── Generate reset link ─────────────────────────────────────────────────────
+
+@router.post("/accounts/{user_id}/reset-link", response_class=JSONResponse)
+async def generate_reset_link(
+    user_id: int,
+    admin: models.User = Depends(require_admin_or_sub),
+    db: Session = Depends(get_db),
+):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        return JSONResponse({"ok": False, "error": "Utilisateur introuvable."}, status_code=404)
+    token = create_reset_token(user.id)
+    link = f"{BASE_URL}/reset-password?token={token}"
+    return JSONResponse({"ok": True, "link": link})
 
 
 # ── Entry scan ───────────────────────────────────────────────────────────────
