@@ -125,6 +125,53 @@ def _generate_ticket_pdf(name: str, email: str, qr_base64: str) -> bytes:
     return pdf.output()
 
 
+def send_reset_email(to_email: str, name: str, reset_link: str):
+    """Send a password reset email."""
+    if not RESEND_API_KEY or RESEND_API_KEY == "re_REPLACE_ME":
+        return
+
+    resend.api_key = RESEND_API_KEY
+
+    html = f"""
+    <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: auto; padding: 24px;">
+      <div style="background: #2E1A0E; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+        <h1 style="color: #F5C842; margin: 0; font-size: 28px;">SARCITOPIA</h1>
+        <p style="color: rgba(245,239,224,0.6); margin: 4px 0 0; font-size: 13px;">La Prairie des Merveilles</p>
+      </div>
+      <div style="background: #fff8ee; padding: 28px; border: 1px solid #d9cdb4; border-top: none; border-radius: 0 0 12px 12px;">
+        <h2 style="color: #2E1A0E; margin: 0 0 8px;">R\u00e9initialiser votre mot de passe</h2>
+        <p style="color: #7a6045;">Bonjour <strong>{name}</strong>,</p>
+        <p style="color: #7a6045;">
+          Cliquez sur le bouton ci-dessous pour d\u00e9finir un nouveau mot de passe.
+          Ce lien est valable <strong>15 minutes</strong>.
+        </p>
+
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="{reset_link}" style="
+            background: #F4632A; color: white; padding: 14px 28px;
+            border-radius: 50px; text-decoration: none; font-weight: bold;
+            font-size: 15px; display: inline-block;
+          ">R\u00e9initialiser mon mot de passe \u2192</a>
+        </div>
+
+        <p style="color: #999; font-size: 12px;">
+          Si vous n'avez pas demand\u00e9 cette r\u00e9initialisation, ignorez cet email.
+        </p>
+      </div>
+      <p style="color: #999; font-size: 12px; text-align: center; margin-top: 16px;">
+        Sarcitopia &mdash; {BASE_URL}
+      </p>
+    </div>
+    """
+
+    resend.Emails.send({
+        "from": EMAIL_FROM,
+        "to": to_email,
+        "subject": "\U0001f510 R\u00e9initialisation de votre mot de passe Sarcitopia",
+        "html": html,
+    })
+
+
 def send_ticket_email(to_email: str, name: str, token: str, qr_base64: str):
     """Send the festival ticket with QR code as PDF attachment."""
     if not RESEND_API_KEY or RESEND_API_KEY == "re_REPLACE_ME":

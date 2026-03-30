@@ -4,7 +4,9 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models
-from app.auth import hash_password, verify_password, create_access_token, get_current_user_optional
+from app.auth import hash_password, verify_password, create_access_token, create_reset_token, decode_reset_token, get_current_user_optional
+from app.email_utils import send_reset_email
+from app.config import BASE_URL
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -39,8 +41,11 @@ async def register(
     email = email.lower().strip()
     existing = db.query(models.User).filter(models.User.email == email).first()
     if existing:
-        # If the account was pre-created by admin (bartender/scanner/sub-admin), let them claim it
-        if (existing.is_bartender or existing.is_scanner or existing.is_sub_admin) and not existing.ticket_purchased:
+        # If the account was pre-created by admin (bartender/scanner/sub-admin)
+        # and the user has never set their own password (ticket not purchased, no real login),
+        # let them claim it by setting their name and password.
+        is_precreated = existing.is_bartender or existing.is_scanner or existing.is_sub_admin
+        if is_precreated and not existing.ticket_purchased:
             existing.name = name.strip()
             existing.password_hash = hash_password(password)
             db.commit()
@@ -51,7 +56,7 @@ async def register(
             return response
         return templates.TemplateResponse(
             "register.html",
-            {"request": request, "error": "Un compte existe d\u00e9j\u00e0 avec cet email."},
+            {"request": request, "error": "Un compte existe d\u00e9j\u00e0 avec cet email. Connectez-vous ou r\u00e9initialisez votre mot de passe."},
             status_code=400,
         )
     user = models.User(name=name.strip(), email=email, password_hash=hash_password(password))
@@ -91,6 +96,71 @@ async def login(
     token = create_access_token(user.id)
     response.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=60 * 60 * 24 * 7)
     return response
+
+
+@router.get("/forgot-password", response_class=HTMLResponse)
+async def forgot_password_page(request: Request):
+    return templates.TemplateResponse("forgot_password.html", {"request": request, "message": None, "error": None})
+
+
+@router.post("/forgot-password", response_class=HTMLResponse)
+async def forgot_password(
+    request: Request,
+    email: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    email = email.lower().strip()
+    user = db.query(models.User).filter(models.User.email == email).first()
+    # Always show the same message to prevent email enumeration
+    success_msg = "Si un compte existe avec cet email, vous recevrez un lien de r\u00e9initialisation."
+    if user:
+        token = create_reset_token(user.id)
+        reset_link = f"{BASE_URL}/reset-password?token={token}"
+        send_reset_email(user.email, user.name, reset_link)
+    return templates.TemplateResponse("forgot_password.html", {
+        "request": request, "message": success_msg, "error": None,
+    })
+
+
+@router.get("/reset-password", response_class=HTMLResponse)
+async def reset_password_page(request: Request, token: str = ""):
+    if not token:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request, "error": "Lien invalide.", "token": "", "success": False,
+        })
+    # Verify token is valid (don't consume it yet)
+    user_id = decode_reset_token(token)
+    if not user_id:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request, "error": "Ce lien a expir\u00e9 ou est invalide. Demandez un nouveau lien.", "token": "", "success": False,
+        })
+    return templates.TemplateResponse("reset_password.html", {
+        "request": request, "error": None, "token": token, "success": False,
+    })
+
+
+@router.post("/reset-password", response_class=HTMLResponse)
+async def reset_password(
+    request: Request,
+    token: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    user_id = decode_reset_token(token)
+    if not user_id:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request, "error": "Ce lien a expir\u00e9 ou est invalide. Demandez un nouveau lien.", "token": "", "success": False,
+        })
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request, "error": "Utilisateur introuvable.", "token": "", "success": False,
+        })
+    user.password_hash = hash_password(password)
+    db.commit()
+    return templates.TemplateResponse("reset_password.html", {
+        "request": request, "error": None, "token": "", "success": True,
+    })
 
 
 @router.get("/logout")
