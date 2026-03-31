@@ -133,6 +133,7 @@
           {% if u.ticket_scanned %}
             <span class="badge-sm badge-validated">Entr&eacute;e valid&eacute;e</span>
           {% endif %}
+          {% if u.is_admin %}<span class="badge-sm badge-role">Admin</span>{% endif %}
           {% if u.is_bartender %}<span class="badge-sm badge-role">Barman</span>{% endif %}
           {% if u.is_scanner %}<span class="badge-sm badge-role">Scanner</span>{% endif %}
           {% if u.is_sub_admin %}<span class="badge-sm badge-role">Sub-admin</span>{% endif %}

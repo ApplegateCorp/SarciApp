@@ -90,7 +90,7 @@ async def accounts_page(
     filter: str = Query(default="all"),
     q: str = Query(default=""),
 ):
-    query = db.query(models.User).filter(models.User.is_admin == False)
+    query = db.query(models.User)
 
     if filter == "no_ticket":
         query = query.filter(models.User.ticket_purchased == False)
@@ -116,8 +116,8 @@ async def accounts_page(
 
     # Counts for filter badges
     counts = {
-        "all": db.query(models.User).filter(models.User.is_admin == False).count(),
-        "no_ticket": db.query(models.User).filter(models.User.is_admin == False, models.User.ticket_purchased == False).count(),
+        "all": db.query(models.User).count(),
+        "no_ticket": db.query(models.User).filter(models.User.ticket_purchased == False).count(),
         "has_ticket": db.query(models.User).filter(models.User.ticket_purchased == True).count(),
         "validated": db.query(models.User).filter(models.User.ticket_scanned == True).count(),
         "not_validated": db.query(models.User).filter(models.User.ticket_purchased == True, models.User.ticket_scanned == False).count(),

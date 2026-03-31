@@ -907,6 +907,7 @@ footer { background: var(--surface); border-top: 1px solid var(--border); paddin
 .info-block-body p:last-child { margin-bottom: 0; }
 .info-block-body strong { color: var(--text); font-weight: 500; }
 .info-block-body a { color: var(--primary); }
+.info-block-body a.btn-primary { color: #fff !important; }
 
 .info-steps {
   padding-left: 20px;
