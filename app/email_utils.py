@@ -7,58 +7,58 @@ from app.config import RESEND_API_KEY, EMAIL_FROM, BASE_URL
 
 
 def _generate_ticket_pdf(name: str, email: str, qr_base64: str) -> bytes:
-    """Generate a beautiful PDF ticket with QR code."""
+    """Generate a PDF ticket with QR code."""
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=False)
 
-    # ── Background color (cream) ──
-    pdf.set_fill_color(245, 239, 224)
+    # ── Background color (light green) ──
+    pdf.set_fill_color(238, 242, 232)
     pdf.rect(0, 0, 210, 297, "F")
 
-    # ── Header bar (brown) ──
-    pdf.set_fill_color(46, 26, 14)
+    # ── Header bar (charcoal) ──
+    pdf.set_fill_color(44, 44, 44)
     pdf.rect(0, 0, 210, 50, "F")
 
     # ── Title ──
-    pdf.set_y(12)
-    pdf.set_font("Helvetica", "B", 28)
-    pdf.set_text_color(245, 200, 66)  # yellow
-    pdf.cell(0, 14, "SARCITOPIA", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_y(10)
+    pdf.set_font("Helvetica", "B", 22)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 12, "REPEAT THE MONKEY #3", align="C", new_x="LMARGIN", new_y="NEXT")
 
-    pdf.set_font("Helvetica", "", 10)
-    pdf.set_text_color(245, 239, 224)
-    pdf.cell(0, 8, "La Prairie des Merveilles", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(200, 200, 200)
+    pdf.cell(0, 7, "3 - 4 - 5 Juillet 2026", align="C", new_x="LMARGIN", new_y="NEXT")
 
     # ── Ticket info section ──
     pdf.set_y(62)
-    pdf.set_text_color(46, 26, 14)
+    pdf.set_text_color(44, 44, 44)
 
-    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_font("Helvetica", "B", 16)
     pdf.cell(0, 12, "Billet d'entree", align="C", new_x="LMARGIN", new_y="NEXT")
 
     pdf.ln(8)
 
     # Dashed line
-    pdf.set_draw_color(217, 205, 180)
+    pdf.set_draw_color(209, 217, 200)
     pdf.set_line_width(0.5)
     pdf.dashed_line(30, pdf.get_y(), 180, pdf.get_y(), 4, 3)
     pdf.ln(8)
 
     # Attendee info
-    pdf.set_font("Helvetica", "", 10)
-    pdf.set_text_color(122, 96, 69)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(107, 107, 107)
     pdf.cell(0, 7, "NOM", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "B", 16)
-    pdf.set_text_color(46, 26, 14)
+    pdf.set_text_color(44, 44, 44)
     pdf.cell(0, 10, name, align="C", new_x="LMARGIN", new_y="NEXT")
 
     pdf.ln(4)
-    pdf.set_font("Helvetica", "", 10)
-    pdf.set_text_color(122, 96, 69)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(107, 107, 107)
     pdf.cell(0, 7, "EMAIL", align="C", new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font("Helvetica", "", 12)
-    pdf.set_text_color(46, 26, 14)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.set_text_color(44, 44, 44)
     pdf.cell(0, 8, email, align="C", new_x="LMARGIN", new_y="NEXT")
 
     pdf.ln(10)
@@ -68,8 +68,8 @@ def _generate_ticket_pdf(name: str, email: str, qr_base64: str) -> bytes:
     pdf.ln(10)
 
     # ── QR Code ──
-    pdf.set_font("Helvetica", "", 9)
-    pdf.set_text_color(122, 96, 69)
+    pdf.set_font("Helvetica", "", 8)
+    pdf.set_text_color(107, 107, 107)
     pdf.cell(0, 6, "PRESENTEZ CE QR CODE A L'ENTREE", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(6)
 
@@ -85,35 +85,35 @@ def _generate_ticket_pdf(name: str, email: str, qr_base64: str) -> bytes:
     pdf.set_y(pdf.get_y() + 65)
 
     pdf.set_font("Helvetica", "", 8)
-    pdf.set_text_color(122, 96, 69)
+    pdf.set_text_color(107, 107, 107)
     pdf.cell(0, 5, "Ce billet est personnel et non-transferable.", align="C", new_x="LMARGIN", new_y="NEXT")
 
     pdf.ln(12)
 
     # ── Info box ──
-    pdf.set_fill_color(255, 248, 238)
-    pdf.set_draw_color(217, 205, 180)
+    pdf.set_fill_color(255, 255, 255)
+    pdf.set_draw_color(209, 217, 200)
     box_y = pdf.get_y()
     pdf.rect(25, box_y, 160, 32, "DF")
     pdf.set_xy(30, box_y + 4)
     pdf.set_font("Helvetica", "B", 9)
-    pdf.set_text_color(46, 26, 14)
+    pdf.set_text_color(44, 44, 44)
     pdf.cell(150, 5, "Compte bar prepaye", new_x="LMARGIN", new_y="NEXT")
     pdf.set_x(30)
     pdf.set_font("Helvetica", "", 8)
-    pdf.set_text_color(122, 96, 69)
+    pdf.set_text_color(107, 107, 107)
     pdf.multi_cell(150, 4,
         "Rechargez votre compte bar en ligne avant ou pendant le festival.\n"
         f"Connectez-vous sur {BASE_URL}/wallet pour recharger."
     )
 
     # ── Footer bar ──
-    pdf.set_fill_color(46, 26, 14)
+    pdf.set_fill_color(44, 44, 44)
     pdf.rect(0, 275, 210, 22, "F")
     pdf.set_y(279)
     pdf.set_font("Helvetica", "", 8)
-    pdf.set_text_color(245, 239, 224)
-    pdf.cell(0, 5, f"SARCITOPIA  |  {BASE_URL}", align="C")
+    pdf.set_text_color(200, 200, 200)
+    pdf.cell(0, 5, f"REPEAT THE MONKEY #3  |  {BASE_URL}", align="C")
 
     # Clean up temp file
     import os
@@ -133,33 +133,33 @@ def send_reset_email(to_email: str, name: str, reset_link: str):
     resend.api_key = RESEND_API_KEY
 
     html = f"""
-    <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: auto; padding: 24px;">
-      <div style="background: #2E1A0E; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-        <h1 style="color: #F5C842; margin: 0; font-size: 28px;">SARCITOPIA</h1>
-        <p style="color: rgba(245,239,224,0.6); margin: 4px 0 0; font-size: 13px;">La Prairie des Merveilles</p>
+    <div style="font-family: 'Roboto', -apple-system, sans-serif; max-width: 600px; margin: auto; padding: 24px;">
+      <div style="background: #2C2C2C; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+        <h1 style="color: #fff; margin: 0; font-size: 22px; letter-spacing: 0.04em; text-transform: uppercase;">Repeat the Monkey #3</h1>
+        <p style="color: rgba(255,255,255,0.5); margin: 4px 0 0; font-size: 12px;">3 - 4 - 5 Juillet 2026</p>
       </div>
-      <div style="background: #fff8ee; padding: 28px; border: 1px solid #d9cdb4; border-top: none; border-radius: 0 0 12px 12px;">
-        <h2 style="color: #2E1A0E; margin: 0 0 8px;">R\u00e9initialiser votre mot de passe</h2>
-        <p style="color: #7a6045;">Bonjour <strong>{name}</strong>,</p>
-        <p style="color: #7a6045;">
-          Cliquez sur le bouton ci-dessous pour d\u00e9finir un nouveau mot de passe.
+      <div style="background: #ffffff; padding: 28px; border: 1px solid #D1D9C8; border-top: none; border-radius: 0 0 12px 12px;">
+        <h2 style="color: #2C2C2C; margin: 0 0 8px; font-size: 18px;">Reinitialiser votre mot de passe</h2>
+        <p style="color: #6B6B6B;">Bonjour <strong style="color:#2C2C2C;">{name}</strong>,</p>
+        <p style="color: #6B6B6B;">
+          Cliquez sur le bouton ci-dessous pour definir un nouveau mot de passe.
           Ce lien est valable <strong>15 minutes</strong>.
         </p>
 
         <div style="text-align: center; margin: 28px 0;">
           <a href="{reset_link}" style="
-            background: #F4632A; color: white; padding: 14px 28px;
-            border-radius: 50px; text-decoration: none; font-weight: bold;
-            font-size: 15px; display: inline-block;
-          ">R\u00e9initialiser mon mot de passe \u2192</a>
+            background: #3D6B4F; color: white; padding: 14px 28px;
+            border-radius: 50px; text-decoration: none; font-weight: 500;
+            font-size: 14px; display: inline-block;
+          ">Reinitialiser mon mot de passe</a>
         </div>
 
         <p style="color: #999; font-size: 12px;">
-          Si vous n'avez pas demand\u00e9 cette r\u00e9initialisation, ignorez cet email.
+          Si vous n'avez pas demande cette reinitialisation, ignorez cet email.
         </p>
       </div>
-      <p style="color: #999; font-size: 12px; text-align: center; margin-top: 16px;">
-        Sarcitopia &mdash; {BASE_URL}
+      <p style="color: #999; font-size: 11px; text-align: center; margin-top: 16px;">
+        Repeat the Monkey #3 &mdash; {BASE_URL}
       </p>
     </div>
     """
@@ -167,7 +167,7 @@ def send_reset_email(to_email: str, name: str, reset_link: str):
     resend.Emails.send({
         "from": EMAIL_FROM,
         "to": to_email,
-        "subject": "\U0001f510 R\u00e9initialisation de votre mot de passe Sarcitopia",
+        "subject": "Reinitialisation de votre mot de passe",
         "html": html,
     })
 
@@ -185,39 +185,39 @@ def send_ticket_email(to_email: str, name: str, token: str, qr_base64: str):
     pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
 
     html = f"""
-    <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: auto; padding: 24px;">
-      <div style="background: #2E1A0E; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-        <h1 style="color: #F5C842; margin: 0; font-size: 28px;">SARCITOPIA</h1>
-        <p style="color: rgba(245,239,224,0.6); margin: 4px 0 0; font-size: 13px;">La Prairie des Merveilles</p>
+    <div style="font-family: 'Roboto', -apple-system, sans-serif; max-width: 600px; margin: auto; padding: 24px;">
+      <div style="background: #2C2C2C; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+        <h1 style="color: #fff; margin: 0; font-size: 22px; letter-spacing: 0.04em; text-transform: uppercase;">Repeat the Monkey #3</h1>
+        <p style="color: rgba(255,255,255,0.5); margin: 4px 0 0; font-size: 12px;">3 - 4 - 5 Juillet 2026</p>
       </div>
-      <div style="background: #fff8ee; padding: 28px; border: 1px solid #d9cdb4; border-top: none; border-radius: 0 0 12px 12px;">
-        <h2 style="color: #2E1A0E; margin: 0 0 8px;">Ton billet est confirm\u00e9 !</h2>
-        <p style="color: #7a6045;">Bonjour <strong>{name}</strong>,</p>
-        <p style="color: #7a6045;">
-          Ton billet pour Sarcitopia est en pi\u00e8ce jointe (PDF).
-          Pr\u00e9sente le QR code \u00e0 l'entr\u00e9e du festival.
+      <div style="background: #ffffff; padding: 28px; border: 1px solid #D1D9C8; border-top: none; border-radius: 0 0 12px 12px;">
+        <h2 style="color: #2C2C2C; margin: 0 0 8px; font-size: 18px;">Ton billet est confirme</h2>
+        <p style="color: #6B6B6B;">Bonjour <strong style="color:#2C2C2C;">{name}</strong>,</p>
+        <p style="color: #6B6B6B;">
+          Ton billet pour Repeat the Monkey #3 est en piece jointe (PDF).
+          Presente le QR code a l'entree du festival.
         </p>
 
         <div style="text-align: center; margin: 28px 0;">
           <a href="{ticket_url}" style="
-            background: #F4632A; color: white; padding: 14px 28px;
-            border-radius: 50px; text-decoration: none; font-weight: bold;
-            font-size: 15px; display: inline-block;
-          ">Voir mon billet en ligne \u2192</a>
+            background: #3D6B4F; color: white; padding: 14px 28px;
+            border-radius: 50px; text-decoration: none; font-weight: 500;
+            font-size: 14px; display: inline-block;
+          ">Voir mon billet en ligne</a>
         </div>
 
-        <div style="background: #F5EFE0; border: 1px solid #d9cdb4; border-radius: 10px; padding: 16px; margin-top: 20px;">
-          <p style="color: #2E1A0E; font-weight: bold; margin: 0 0 6px; font-size: 14px;">
-            \U0001f37a Compte bar pr\u00e9pay\u00e9
+        <div style="background: #EEF2E8; border: 1px solid #D1D9C8; border-radius: 10px; padding: 16px; margin-top: 20px;">
+          <p style="color: #2C2C2C; font-weight: 500; margin: 0 0 6px; font-size: 14px;">
+            Compte bar prepaye
           </p>
-          <p style="color: #7a6045; margin: 0; font-size: 13px;">
-            Recharge ton compte bar en ligne pour payer tes consos au festival !
-            <a href="{BASE_URL}/wallet" style="color: #F4632A;">Recharger maintenant \u2192</a>
+          <p style="color: #6B6B6B; margin: 0; font-size: 13px;">
+            Recharge ton compte bar en ligne pour payer tes consos au festival.
+            <a href="{BASE_URL}/wallet" style="color: #3D6B4F;">Recharger maintenant</a>
           </p>
         </div>
       </div>
-      <p style="color: #999; font-size: 12px; text-align: center; margin-top: 16px;">
-        Sarcitopia &mdash; {BASE_URL}
+      <p style="color: #999; font-size: 11px; text-align: center; margin-top: 16px;">
+        Repeat the Monkey #3 &mdash; {BASE_URL}
       </p>
     </div>
     """
@@ -225,11 +225,11 @@ def send_ticket_email(to_email: str, name: str, token: str, qr_base64: str):
     resend.Emails.send({
         "from": EMAIL_FROM,
         "to": to_email,
-        "subject": "\U0001f389 Ton billet Sarcitopia est confirm\u00e9 !",
+        "subject": "Ton billet Repeat the Monkey #3 est confirme",
         "html": html,
         "attachments": [
             {
-                "filename": "billet-sarcitopia.pdf",
+                "filename": "billet-repeat-the-monkey.pdf",
                 "content": pdf_b64,
                 "content_type": "application/pdf",
             }

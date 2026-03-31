@@ -1,68 +1,68 @@
 {% extends "base.html" %}
-{% block title %}Informations pratiques — Sarcitopia{% endblock %}
+{% block title %}Informations pratiques — Repeat the Monkey #3{% endblock %}
 {% block content %}
 
 <div class="info-page">
 
   <div class="page-header">
-    <p class="hero-eyebrow">🌿 La Prairie des Merveilles</p>
+    <p class="hero-eyebrow">3 &middot; 4 &middot; 5 Juillet 2026</p>
     <h1>Informations pratiques</h1>
-    <p>Tout ce qu'il faut savoir pour préparer votre séjour à Sarcitopia.</p>
+    <p>Tout ce qu'il faut savoir pour preparer votre sejour.</p>
   </div>
 
   <div class="info-blocks">
 
     <div class="info-block">
-      <div class="info-block-icon">📍</div>
+      <div class="info-block-icon">01</div>
       <div class="info-block-body">
-        <h2>Où se déroule le festival ?</h2>
-        <p>Sarcitopia se tient dans un cadre naturel privé — <strong>La Prairie des Merveilles</strong>. L'adresse exacte vous sera communiquée par email après l'achat de votre billet.</p>
+        <h2>Lieu</h2>
+        <p>Le festival se tient dans un cadre naturel prive — <strong>La Prairie</strong>. L'adresse exacte vous sera communiquee par email apres l'achat de votre billet.</p>
       </div>
     </div>
 
     <div class="info-block">
-      <div class="info-block-icon">🎟️</div>
+      <div class="info-block-icon">02</div>
       <div class="info-block-body">
-        <h2>Billets &amp; accès</h2>
-        <p>Le festival est <strong>sur invitation uniquement</strong>. Aucune vente de billet ne sera possible sur place. Votre QR code d'entrée vous est envoyé par email dès l'achat et accessible à tout moment depuis votre compte.</p>
-        <p>Un seul scan par billet est autorisé à l'entrée.</p>
+        <h2>Billets et acces</h2>
+        <p>Le festival est <strong>sur invitation uniquement</strong>. Aucune vente de billet ne sera possible sur place. Votre QR code d'entree vous est envoye par email des l'achat et accessible a tout moment depuis votre compte.</p>
+        <p>Un seul scan par billet est autorise a l'entree.</p>
         {% if not user %}
-        <a href="/register" class="btn-primary" style="margin-top:12px;display:inline-block;">Acheter mon billet →</a>
+        <a href="/register" class="btn-primary" style="margin-top:12px;display:inline-block;">Acheter mon billet</a>
         {% endif %}
       </div>
     </div>
 
     <div class="info-block">
-      <div class="info-block-icon">🍺</div>
+      <div class="info-block-icon">03</div>
       <div class="info-block-body">
-        <h2>Le bar &amp; les consommations</h2>
-        <p>Les bars du festival fonctionnent via un système de <strong>compte prépayé</strong>. Rechargez votre compte depuis votre téléphone à tout moment, avant ou pendant le festival.</p>
-        <p>Au bar, le barman sélectionne vos consommations et scanne votre QR code — le montant est déduit instantanément. Pas de liquide, pas de file d'attente.</p>
+        <h2>Le bar et les consommations</h2>
+        <p>Les bars du festival fonctionnent via un systeme de <strong>compte prepaye</strong>. Rechargez votre compte depuis votre telephone a tout moment, avant ou pendant le festival.</p>
+        <p>Au bar, le barman selectionne vos consommations et scanne votre QR code — le montant est deduit instantanement. Pas de liquide, pas de file d'attente.</p>
         {% if user %}
-        <a href="/wallet" class="btn-primary" style="margin-top:12px;display:inline-block;">Recharger mon compte →</a>
+        <a href="/wallet" class="btn-primary" style="margin-top:12px;display:inline-block;">Recharger mon compte</a>
         {% endif %}
       </div>
     </div>
 
     <div class="info-block">
-      <div class="info-block-icon">📱</div>
+      <div class="info-block-icon">04</div>
       <div class="info-block-body">
-        <h2>Comment utiliser l'application ?</h2>
+        <h2>Comment utiliser l'application</h2>
         <ol class="info-steps">
-          <li><strong>Créez votre compte</strong> et achetez votre billet en ligne.</li>
+          <li><strong>Creez votre compte</strong> et achetez votre billet en ligne.</li>
           <li><strong>Recevez votre QR code</strong> par email (aussi accessible depuis votre compte).</li>
-          <li><strong>À l'entrée</strong> : présentez votre QR code, il sera scanné une fois.</li>
-          <li><strong>Au bar</strong> : rechargez votre compte depuis l'onglet "Bar", présentez votre QR au barman.</li>
+          <li><strong>A l'entree</strong> : presentez votre QR code, il sera scanne une fois.</li>
+          <li><strong>Au bar</strong> : rechargez votre compte, presentez votre QR au barman.</li>
         </ol>
-        <p class="info-note">💡 Astuce : ajoutez ce site à votre écran d'accueil pour un accès rapide (Safari → "Sur l'écran d'accueil").</p>
+        <p class="info-note">Astuce : ajoutez ce site a votre ecran d'accueil pour un acces rapide (Safari — Sur l'ecran d'accueil).</p>
       </div>
     </div>
 
     <div class="info-block">
-      <div class="info-block-icon">❓</div>
+      <div class="info-block-icon">05</div>
       <div class="info-block-body">
         <h2>Une question ?</h2>
-        <p>Contactez-nous sur Instagram <a href="https://www.instagram.com/sarcitopia.festival/" target="_blank">@sarcitopia.festival</a> ou par DM.</p>
+        <p>Contactez-nous par message prive sur les reseaux.</p>
       </div>
     </div>
 

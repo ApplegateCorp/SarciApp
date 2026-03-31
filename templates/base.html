@@ -6,15 +6,15 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#2E1A0E" />
-  <title>{% block title %}Sarcitopia{% endblock %}</title>
+  <meta name="theme-color" content="#2C2C2C" />
+  <title>{% block title %}Repeat the Monkey #3{% endblock %}</title>
   <link rel="stylesheet" href="/static/css/style.css" />
   {% block head %}{% endblock %}
 </head>
 <body>
 
   <nav class="navbar">
-    <a href="/" class="nav-brand">✦ SARCITOPIA</a>
+    <a href="/" class="nav-brand">Repeat the Monkey #3</a>
     <div class="nav-links">
       <a href="/info" class="nav-link-subtle">Infos</a>
       {% if user %}
@@ -24,18 +24,18 @@
         <a href="/history" class="nav-link-subtle">Historique</a>
         {% endif %}
         {% if user.is_bartender or user.is_admin or user.is_sub_admin %}
-        <a href="/admin/bar" class="nav-cta" style="background:var(--green); border-color:var(--green);">🍺 Bar</a>
+        <a href="/admin/bar" class="nav-cta">Bar</a>
         {% endif %}
         {% if user.is_scanner %}
-        <a href="/admin/entry" class="nav-cta" style="background:var(--sky); border-color:var(--sky);">🎟 Scanner</a>
+        <a href="/admin/entry" class="nav-cta" style="background:var(--sage); border-color:var(--sage);">Scanner</a>
         {% endif %}
         {% if user.is_admin or user.is_sub_admin %}
         <a href="/admin/dashboard" class="nav-link-subtle">Admin</a>
         {% endif %}
-        <a href="/logout" class="nav-link-subtle">Déconnexion</a>
+        <a href="/logout" class="nav-link-subtle">Deconnexion</a>
       {% else %}
         <a href="/login" class="nav-link-subtle">Connexion</a>
-        <a href="/register" class="nav-cta">🎟 Billets</a>
+        <a href="/register" class="nav-cta">Billets</a>
       {% endif %}
     </div>
   </nav>
@@ -46,12 +46,12 @@
   </main>
   <footer>
     <div class="footer-inner">
-      <span class="footer-logo">✦ SARCITOPIA</span>
-      <span class="footer-tagline">La Prairie des Merveilles &nbsp;·&nbsp; by @sarcirecords &amp; friends</span>
+      <span class="footer-logo">Repeat the Monkey #3</span>
+      <span class="footer-tagline">Une parenthese bucolique a en perdre la notion du temps.</span>
       {% if user and user.ticket_purchased %}
-      <a href="/wallet" class="footer-cta">Recharger son compte →</a>
+      <a href="/wallet" class="footer-cta">Recharger son compte</a>
       {% else %}
-      <a href="/register" class="footer-cta">Acheter un billet →</a>
+      <a href="/register" class="footer-cta">Acheter un billet</a>
       {% endif %}
     </div>
   </footer>

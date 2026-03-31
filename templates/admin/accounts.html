@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Comptes — Sarcitopia Admin</title>
+  <title>Comptes — RTM Admin</title>
   <link rel="stylesheet" href="/static/css/style.css" />
   <style>
     .filter-bar {
@@ -76,7 +76,7 @@
 <body>
   <nav class="navbar">
     <a href="/admin/dashboard" class="nav-brand">&larr; Admin</a>
-    <span class="nav-brand">👥 Comptes</span>
+    <span class="nav-brand">Comptes</span>
   </nav>
   <main class="container" style="max-width:720px;">
     <div class="page-header">
@@ -139,7 +139,7 @@
         </div>
       </div>
       <div class="account-right">
-        <button class="btn-reset-link" onclick="event.preventDefault();event.stopPropagation();genResetLink(this,{{ u.id }})">🔗 Lien MDP</button>
+        <button class="btn-reset-link" onclick="event.preventDefault();event.stopPropagation();genResetLink(this,{{ u.id }})">Changer MDP</button>
         <div class="account-balance">{{ "%.2f"|format(u.balance_cents / 100) }} &euro;</div>
       </div>
     </a>
@@ -152,7 +152,7 @@
 
   <script>
   async function genResetLink(btn, userId) {
-    btn.textContent = '⏳';
+    btn.textContent = '...';
     try {
       const res = await fetch(`/admin/accounts/${userId}/reset-link`, {method:'POST'});
       const data = await res.json();
@@ -163,14 +163,14 @@
         const toast = document.getElementById('toast');
         toast.classList.add('show');
         setTimeout(() => { toast.classList.remove('show'); }, 2000);
-        setTimeout(() => { btn.textContent = '🔗 Lien MDP'; btn.classList.remove('copied'); }, 3000);
+        setTimeout(() => { btn.textContent = 'Changer MDP'; btn.classList.remove('copied'); }, 3000);
       } else {
         btn.textContent = '✗ Erreur';
-        setTimeout(() => { btn.textContent = '🔗 Lien MDP'; }, 2000);
+        setTimeout(() => { btn.textContent = 'Changer MDP'; }, 2000);
       }
     } catch(e) {
       btn.textContent = '✗ Erreur';
-      setTimeout(() => { btn.textContent = '🔗 Lien MDP'; }, 2000);
+      setTimeout(() => { btn.textContent = 'Changer MDP'; }, 2000);
     }
   }
   </script>

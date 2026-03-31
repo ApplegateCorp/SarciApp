@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sub-admins — Sarcitopia Admin</title>
+  <title>Sub-admins — RTM Admin</title>
   <link rel="stylesheet" href="/static/css/style.css" />
   <style>
     .role-card {
@@ -16,12 +16,12 @@
       width: 44px; height: 44px; border-radius: 50%; background: var(--surface2);
       display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;
     }
-    .role-meta h3 { font-size: 1rem; margin: 0 0 2px; font-family: 'DM Sans', sans-serif; }
+    .role-meta h3 { font-size: 1rem; margin: 0 0 2px; font-family: 'Roboto', sans-serif; }
     .role-meta .email { color: var(--text-muted); font-size: 0.85rem; }
     .btn-remove {
       padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: 600;
       cursor: pointer; border: 1.5px solid var(--error); background: #fdf0ee;
-      color: var(--error); font-family: 'DM Sans', sans-serif;
+      color: var(--error); font-family: 'Roboto', sans-serif;
     }
     .btn-remove:hover { background: var(--error); color: #fff; }
     .info-box {
@@ -34,7 +34,7 @@
 <body>
   <nav class="navbar">
     <a href="/admin/dashboard" class="nav-brand">&larr; Admin</a>
-    <span class="nav-brand">👑 Sub-admins</span>
+    <span class="nav-brand">Sub-admins</span>
   </nav>
   <main class="container">
     <div class="page-header">
@@ -61,7 +61,7 @@
       {% for u in role_users %}
       <div class="role-card">
         <div class="role-info">
-          <div class="role-avatar">👑</div>
+          <div class="role-avatar">A</div>
           <div class="role-meta">
             <h3>{{ u.name }}</h3>
             <span class="email">{{ u.email }}</span>

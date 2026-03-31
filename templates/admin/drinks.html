@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Boissons — Sarcitopia Admin</title>
+  <title>Boissons — RTM Admin</title>
   <link rel="stylesheet" href="/static/css/style.css" />
   <style>
     .drink-card {
@@ -25,7 +25,7 @@
       flex: 1;
     }
     .drink-info .drink-emoji { font-size: 2rem; }
-    .drink-meta h3 { font-size: 1rem; margin: 0 0 2px; font-family: 'DM Sans', sans-serif; }
+    .drink-meta h3 { font-size: 1rem; margin: 0 0 2px; font-family: 'Roboto', sans-serif; }
     .drink-meta .price { color: var(--orange); font-weight: 700; font-size: 0.95rem; }
     .drink-meta .status { font-size: 0.78rem; color: var(--text-muted); }
     .drink-actions {
@@ -42,7 +42,7 @@
       border: 1.5px solid var(--border);
       background: var(--cream);
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Roboto', sans-serif;
     }
     .drink-actions .btn-sm:hover { border-color: var(--primary); color: var(--primary); }
     .btn-delete { color: var(--error) !important; border-color: var(--error) !important; background: #fdf0ee !important; }
@@ -78,7 +78,7 @@
 <body>
   <nav class="navbar">
     <a href="/admin/dashboard" class="nav-brand">← Admin</a>
-    <span class="nav-brand">📋 Menu</span>
+    <span class="nav-brand">Menu</span>
   </nav>
 
   <main class="container">
@@ -98,7 +98,7 @@
           <input type="number" name="price" step="0.50" min="0.50" required placeholder="3.50" />
         </label>
         <label>Emoji
-          <input type="text" name="emoji" value="🍺" maxlength="4" />
+          <input type="text" name="emoji" value="" maxlength="4" />
         </label>
         <button type="submit" class="btn-primary btn-full">Ajouter</button>
       </form>

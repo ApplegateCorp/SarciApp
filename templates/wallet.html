@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Mon compte bar — Sarcitopia{% endblock %}
+{% block title %}Mon compte bar — Repeat the Monkey #3{% endblock %}
 
 {% block head %}
 <script src="https://js.stripe.com/v3/"></script>
@@ -10,13 +10,13 @@
   <h1>Mon compte bar</h1>
 
   {% if paid %}
-  <div class="alert alert-success">✅ Rechargement confirmé ! Votre solde sera mis à jour dans quelques instants.</div>
+  <div class="alert alert-success">Rechargement confirme. Votre solde sera mis a jour dans quelques instants.</div>
   {% endif %}
 
   <!-- ── Balance card ──────────────────────────────────────────────────── -->
   <div class="balance-card">
     <span class="balance-label">Solde actuel</span>
-    <span class="balance-big">{{ "%.2f"|format(balance) }} €</span>
+    <span class="balance-big">{{ "%.2f"|format(balance) }} EUR</span>
   </div>
 
   <!-- ── Top-up form ──────────────────────────────────────────────────── -->
@@ -30,12 +30,12 @@
           {% for amount in topup_amounts %}
           <label class="amount-option">
             <input type="radio" name="amount" value="{{ amount }}" {% if loop.index == 2 %}checked{% endif %} />
-            <span>{{ amount }} €</span>
+            <span>{{ amount }} EUR</span>
           </label>
           {% endfor %}
         </div>
         <button id="btn-topup" class="btn-primary btn-full" onclick="startTopup()">
-          Recharger →
+          Recharger
         </button>
       </div>
 
@@ -43,11 +43,11 @@
       <div id="checkout-wrapper" class="hidden">
         <div id="checkout-loading" class="checkout-loading">
           <div class="checkout-spinner"></div>
-          <p>Chargement du paiement…</p>
+          <p>Chargement du paiement...</p>
         </div>
         <div id="checkout"></div>
         <button class="btn-outline btn-full" style="margin-top:12px" onclick="cancelTopup()">
-          ← Changer le montant
+          Changer le montant
         </button>
       </div>
     </div>
@@ -64,7 +64,7 @@
         <span class="tx-date">{{ tx.created_at.strftime('%d/%m %H:%M') }}</span>
       </div>
       <span class="tx-amount">
-        {% if tx.amount_cents > 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} €
+        {% if tx.amount_cents > 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} EUR
       </span>
     </div>
     {% endfor %}
@@ -79,13 +79,11 @@
     const selected = document.querySelector('input[name="amount"]:checked');
     if (!selected) return;
 
-    // Show checkout panel, hide amount picker
     document.getElementById('amount-step').classList.add('hidden');
     document.getElementById('checkout-wrapper').classList.remove('hidden');
 
     const stripe = Stripe('{{ stripe_pk }}');
 
-    // Create session
     const formData = new FormData();
     formData.append('amount', selected.value);
     const res = await fetch('/wallet/topup/session', { method: 'POST', body: formData });

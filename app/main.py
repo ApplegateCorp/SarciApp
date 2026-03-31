@@ -8,7 +8,7 @@ from app import models
 from app.auth import RedirectToLogin, hash_password
 from app.routes import auth, tickets, wallet, admin, webhooks
 
-app = FastAPI(title="Sarcitopia")
+app = FastAPI(title="Repeat the Monkey #3")
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -33,16 +33,21 @@ _run_migrations()
 def _auto_seed():
     db = SessionLocal()
     try:
-        admin_email = os.getenv("ADMIN_EMAIL", "admin@sarcitopia.fr")
-        if not db.query(models.User).filter(models.User.email == admin_email).first():
+        admin_email = os.getenv("ADMIN_EMAIL", "admin@rtm.fr")
+        admin_name = os.getenv("ADMIN_NAME", "Admin")
+        existing_admin = db.query(models.User).filter(models.User.email == admin_email).first()
+        if not existing_admin:
             admin_user = models.User(
-                name=os.getenv("ADMIN_NAME", "Admin"),
+                name=admin_name,
                 email=admin_email,
                 password_hash=hash_password(os.getenv("ADMIN_PASSWORD", "admin123")),
                 is_admin=True,
                 ticket_purchased=True,
             )
             db.add(admin_user)
+            db.commit()
+        elif existing_admin.name != admin_name:
+            existing_admin.name = admin_name
             db.commit()
         if db.query(models.DrinkItem).count() == 0:
             for name, price, emoji in [
