@@ -10,10 +10,10 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./festival.db")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-STRIPE_TICKET_PRICE_ID = os.getenv("STRIPE_TICKET_PRICE_ID", "")
-
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 EMAIL_FROM = os.getenv("EMAIL_FROM", "noreply@festival.fr")
+
+HELLOASSO_WEBHOOK_SECRET = os.getenv("HELLOASSO_WEBHOOK_SECRET", "")
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 

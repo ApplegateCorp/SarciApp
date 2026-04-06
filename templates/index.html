@@ -10,13 +10,13 @@
     <p class="hero-eyebrow">3 &middot; 4 &middot; 5 Juillet 2026</p>
     <h1 class="hero-title">Repeat<br>the Monkey</h1>
     <p class="hero-dates">#3</p>
-    <p class="hero-tagline">Une parenthese bucolique<br>a en perdre la notion du temps.</p>
+    <p class="hero-tagline">Hors du temps.</p>
     <div class="hero-actions">
       {% if not user %}
-        <a href="/register" class="btn-hero">Prendre mon billet</a>
+        <a href="/ticket" class="btn-hero">Prendre mon billet</a>
         <a href="/login" class="btn-hero-ghost">J'ai deja un compte</a>
       {% elif not user.ticket_purchased %}
-        <a href="/ticket" class="btn-hero">Acheter mon billet</a>
+        <a href="/ticket" class="btn-hero">Prendre mon billet</a>
         <a href="/wallet" class="btn-hero-ghost">Recharger mon compte</a>
       {% else %}
         <a href="/ticket" class="btn-hero">Mon billet</a>
@@ -33,13 +33,12 @@
 <section id="discover" class="manifesto-section">
   <div class="manifesto-inner">
     <p class="manifesto-text">
-      Au milieu des pres et des amis,<br>
-      quelque chose de rare se passe.<br>
-      <em>Repeat the Monkey</em> &mdash; un festival qui ne ressemble a rien d'autre.
+      Une ferme isolee, des copain&middot;es<br>
+      et le monde reel qui s'efface pendant 72h.
     </p>
     <p class="manifesto-text manifesto-text--sm">
-      De la musique, des rencontres, des consommations.<br>
-      Tout est ici, dans la prairie.
+      Une parenthese hors du temps, un jardin intimiste et bienveillant<br>
+      ou l'on danse au gre des tracks envoutantes.
     </p>
   </div>
 </section>
@@ -52,11 +51,11 @@
       <div class="feature-block">
         <div class="feature-num">01</div>
         <h3>Votre billet</h3>
-        <p>Achetez en ligne, recevez votre QR code par email. Presentez-le a l'entree.</p>
+        <p>Achetez sur HelloAsso, creez votre compte ici pour obtenir votre QR code d'entree et de bar.</p>
         {% if not user %}
-        <a href="/register" class="btn-feature">Acheter</a>
+        <a href="/ticket" class="btn-feature">Billetterie</a>
         {% elif not user.ticket_purchased %}
-        <a href="/ticket" class="btn-feature">Acheter</a>
+        <a href="/ticket" class="btn-feature">Billetterie</a>
         {% endif %}
       </div>
 
@@ -84,7 +83,7 @@
 <section class="info-strip">
   <div class="info-strip-inner">
     <div class="info-strip-item">
-      <span>La Prairie</span>
+      <span>Le Bangin, Chatenoy</span>
     </div>
     <div class="info-strip-sep">&middot;</div>
     <div class="info-strip-item">
@@ -92,7 +91,7 @@
     </div>
     <div class="info-strip-sep">&middot;</div>
     <div class="info-strip-item">
-      <span>Sur invitation uniquement</span>
+      <span>Hors du temps</span>
     </div>
     <div class="info-strip-sep">&middot;</div>
     <a href="/info" class="info-strip-link">Toutes les infos</a>
@@ -102,11 +101,11 @@
 <footer>
   <div class="footer-inner">
     <span class="footer-logo">Repeat the Monkey #3</span>
-    <span class="footer-tagline">Une parenthese bucolique a en perdre la notion du temps.</span>
+    <span class="footer-tagline">Hors du temps.</span>
     {% if user and user.ticket_purchased %}
     <a href="/wallet" class="footer-cta">Recharger son compte</a>
     {% else %}
-    <a href="/register" class="footer-cta">Acheter un billet</a>
+    <a href="/register" class="footer-cta">Creer mon compte</a>
     {% endif %}
   </div>
 </footer>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Reserver votre billet — Repeat the Monkey #3{% endblock %}
+{% block title %}Creer mon compte — Repeat the Monkey #3{% endblock %}
 {% block content %}
 
 <div class="ticket-flow">
@@ -9,7 +9,7 @@
     <div class="ticket-stub">
       <div class="ticket-stub-top">
         <span class="ticket-stub-event">Repeat the Monkey #3</span>
-        <span class="ticket-stub-sub">Une parenthese bucolique</span>
+        <span class="ticket-stub-sub">Hors du temps</span>
       </div>
       <div class="ticket-stub-dashes"></div>
       <div class="ticket-stub-body">
@@ -19,7 +19,7 @@
         </div>
         <div class="ticket-stub-row">
           <span class="ticket-stub-label">Lieu</span>
-          <span class="ticket-stub-value">La Prairie</span>
+          <span class="ticket-stub-value">Le Bangin, Chatenoy</span>
         </div>
         <div class="ticket-stub-row">
           <span class="ticket-stub-label">Type</span>
@@ -38,13 +38,13 @@
         </div>
       </div>
     </div>
-    <p class="ticket-flow-hint">Votre QR code sera envoye par email apres paiement.</p>
+    <p class="ticket-flow-hint">Votre QR code sera disponible des la creation de votre compte.</p>
   </div>
 
   <!-- Right: form -->
   <div class="ticket-flow-form">
-    <h1>Reserver votre billet</h1>
-    <p class="form-sub">Creez votre compte pour finaliser votre inscription.</p>
+    <h1>Creer mon compte</h1>
+    <p class="form-sub">Utilisez le meme email que sur HelloAsso pour retrouver votre billet.</p>
 
     {% if error %}
     <div class="alert alert-error">{{ error }} <a href="/forgot-password">Mot de passe oublie ?</a></div>
@@ -61,7 +61,7 @@
         <input type="password" name="password" required minlength="8" placeholder="Au moins 8 caracteres" />
       </label>
       <button type="submit" class="btn-primary btn-full btn-lg">
-        Creer mon compte et acheter
+        Creer mon compte
       </button>
     </form>
 

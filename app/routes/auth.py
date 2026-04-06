@@ -41,11 +41,11 @@ async def register(
     email = email.lower().strip()
     existing = db.query(models.User).filter(models.User.email == email).first()
     if existing:
-        # If the account was pre-created by admin (bartender/scanner/sub-admin)
-        # and the user has never set their own password (ticket not purchased, no real login),
-        # let them claim it by setting their name and password.
+        # Allow claiming a pre-created account (admin-added role OR HelloAsso stub)
+        # by setting name and password on first registration.
         is_precreated = existing.is_bartender or existing.is_scanner or existing.is_sub_admin
-        if is_precreated and not existing.ticket_purchased:
+        is_helloasso_stub = existing.ticket_purchased and not existing.is_admin
+        if is_precreated or is_helloasso_stub:
             existing.name = name.strip()
             existing.password_hash = hash_password(password)
             db.commit()
