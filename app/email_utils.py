@@ -118,7 +118,7 @@ def send_welcome_email(to_email: str, name: str, has_account: bool):
           </p>
           <p style="color: #6B6B6B; margin: 0; font-size: 13px;">
             3, 4 et 5 juillet 2026<br/>
-            Le Bangin &mdash; Chatenoy, 45260<br/>
+            <a href="https://maps.app.goo.gl/Bnioi1dDNKMd6aP47" style="color: #3D6B4F;">Le Bangin Chatenoy</a><br/>
             Plus d'infos sur <a href="{BASE_URL}/info" style="color: #3D6B4F;">la page informations pratiques</a>.
           </p>
         </div>
