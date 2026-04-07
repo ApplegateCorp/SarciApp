@@ -27,7 +27,7 @@ async def info_page(request: Request, user=Depends(get_current_user_optional)):
 async def register_page(request: Request, user=Depends(get_current_user_optional)):
     if user:
         return RedirectResponse("/ticket", status_code=302)
-    return templates.TemplateResponse("register.html", {"request": request, "error": None})
+    return templates.TemplateResponse("register.html", {"request": request, "error": None, "user": None})
 
 
 @router.post("/register", response_class=HTMLResponse)
@@ -56,7 +56,7 @@ async def register(
             return response
         return templates.TemplateResponse(
             "register.html",
-            {"request": request, "error": "Un compte existe d\u00e9j\u00e0 avec cet email. Connectez-vous ou r\u00e9initialisez votre mot de passe."},
+            {"request": request, "error": "Un compte existe d\u00e9j\u00e0 avec cet email. Connectez-vous ou r\u00e9initialisez votre mot de passe.", "user": None},
             status_code=400,
         )
     user = models.User(name=name.strip(), email=email, password_hash=hash_password(password))
@@ -74,7 +74,7 @@ async def register(
 async def login_page(request: Request, user=Depends(get_current_user_optional)):
     if user:
         return RedirectResponse("/ticket", status_code=302)
-    return templates.TemplateResponse("login.html", {"request": request, "error": None})
+    return templates.TemplateResponse("login.html", {"request": request, "error": None, "user": None})
 
 
 @router.post("/login", response_class=HTMLResponse)
@@ -89,7 +89,7 @@ async def login(
     if not user or not verify_password(password, user.password_hash):
         return templates.TemplateResponse(
             "login.html",
-            {"request": request, "error": "Invalid email or password."},
+            {"request": request, "error": "Invalid email or password.", "user": None},
             status_code=401,
         )
     response = RedirectResponse("/ticket", status_code=302)
@@ -100,7 +100,7 @@ async def login(
 
 @router.get("/forgot-password", response_class=HTMLResponse)
 async def forgot_password_page(request: Request):
-    return templates.TemplateResponse("forgot_password.html", {"request": request, "message": None, "error": None})
+    return templates.TemplateResponse("forgot_password.html", {"request": request, "message": None, "error": None, "user": None})
 
 
 @router.post("/forgot-password", response_class=HTMLResponse)
@@ -118,7 +118,7 @@ async def forgot_password(
         reset_link = f"{BASE_URL}/reset-password?token={token}"
         send_reset_email(user.email, user.name, reset_link)
     return templates.TemplateResponse("forgot_password.html", {
-        "request": request, "message": success_msg, "error": None,
+        "request": request, "message": success_msg, "error": None, "user": None,
     })
 
 
@@ -126,16 +126,16 @@ async def forgot_password(
 async def reset_password_page(request: Request, token: str = ""):
     if not token:
         return templates.TemplateResponse("reset_password.html", {
-            "request": request, "error": "Lien invalide.", "token": "", "success": False,
+            "request": request, "error": "Lien invalide.", "token": "", "success": False, "user": None,
         })
     # Verify token is valid (don't consume it yet)
     user_id = decode_reset_token(token)
     if not user_id:
         return templates.TemplateResponse("reset_password.html", {
-            "request": request, "error": "Ce lien a expir\u00e9 ou est invalide. Demandez un nouveau lien.", "token": "", "success": False,
+            "request": request, "error": "Ce lien a expir\u00e9 ou est invalide. Demandez un nouveau lien.", "token": "", "success": False, "user": None,
         })
     return templates.TemplateResponse("reset_password.html", {
-        "request": request, "error": None, "token": token, "success": False,
+        "request": request, "error": None, "token": token, "success": False, "user": None,
     })
 
 
@@ -149,17 +149,17 @@ async def reset_password(
     user_id = decode_reset_token(token)
     if not user_id:
         return templates.TemplateResponse("reset_password.html", {
-            "request": request, "error": "Ce lien a expir\u00e9 ou est invalide. Demandez un nouveau lien.", "token": "", "success": False,
+            "request": request, "error": "Ce lien a expir\u00e9 ou est invalide. Demandez un nouveau lien.", "token": "", "success": False, "user": None,
         })
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         return templates.TemplateResponse("reset_password.html", {
-            "request": request, "error": "Utilisateur introuvable.", "token": "", "success": False,
+            "request": request, "error": "Utilisateur introuvable.", "token": "", "success": False, "user": None,
         })
     user.password_hash = hash_password(password)
     db.commit()
     return templates.TemplateResponse("reset_password.html", {
-        "request": request, "error": None, "token": "", "success": True,
+        "request": request, "error": None, "token": "", "success": True, "user": None,
     })
 
 

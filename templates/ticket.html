@@ -5,7 +5,7 @@
 <div class="ticket-page">
   <h1>Billetterie</h1>
 
-  {% if user and user.ticket_purchased %}
+  {% if user.ticket_purchased %}
   <!-- ── Ticket avec QR code ──────────────────────────────────────────── -->
   <div class="ticket-card">
     <div class="ticket-header">
@@ -26,21 +26,12 @@
 
   {% else %}
   <!-- ── Pas encore de billet → HelloAsso ────────────────────────────── -->
-  {% if user %}
   <div class="ticket-card no-ticket">
     <div class="ticket-header">
       <h2>Bonjour, {{ user.name }}</h2>
       <p>Achetez votre billet via HelloAsso ci-dessous. Votre compte sera active automatiquement.</p>
     </div>
   </div>
-  {% else %}
-  <div class="ticket-card no-ticket">
-    <div class="ticket-header">
-      <h2>Prendre mon billet</h2>
-      <p>Achetez votre billet via HelloAsso ci-dessous, puis <a href="/register">creez votre compte</a> avec le meme email pour acceder a votre QR code et au bar prepaye.</p>
-    </div>
-  </div>
-  {% endif %}
 
   <div class="checkout-wrapper">
     <iframe id="haWidget" allowtransparency="true" scrolling="auto"
