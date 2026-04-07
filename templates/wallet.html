@@ -19,37 +19,12 @@
     <span class="balance-big">{{ "%.2f"|format(balance) }} EUR</span>
   </div>
 
-  <!-- ── Top-up form ──────────────────────────────────────────────────── -->
+  <!-- ── Top-up form (coming soon) ─────────────────────────────────────── -->
   <div class="topup-section">
-    <div class="card-form">
+    <div class="card-form" style="text-align: center; padding: 32px 24px;">
       <h2>Recharger mon compte</h2>
-
-      <!-- Amount selector -->
-      <div id="amount-step">
-        <div class="amount-grid">
-          {% for amount in topup_amounts %}
-          <label class="amount-option">
-            <input type="radio" name="amount" value="{{ amount }}" {% if loop.index == 2 %}checked{% endif %} />
-            <span>{{ amount }} EUR</span>
-          </label>
-          {% endfor %}
-        </div>
-        <button id="btn-topup" class="btn-primary btn-full" onclick="startTopup()">
-          Recharger
-        </button>
-      </div>
-
-      <!-- Embedded checkout mounts here -->
-      <div id="checkout-wrapper" class="hidden">
-        <div id="checkout-loading" class="checkout-loading">
-          <div class="checkout-spinner"></div>
-          <p>Chargement du paiement...</p>
-        </div>
-        <div id="checkout"></div>
-        <button class="btn-outline btn-full" style="margin-top:12px" onclick="cancelTopup()">
-          Changer le montant
-        </button>
-      </div>
+      <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 12px;">Coming soon !</p>
+      <p style="color: var(--text-muted); font-size: 0.88rem;">Le rechargement du compte bar sera disponible très bientôt.</p>
     </div>
   </div>
 
