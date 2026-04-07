@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Form, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
+from app.templates_config import to_paris
 from app.database import get_db
 from app import models
 from app.auth import (
@@ -13,9 +13,10 @@ from app.auth import (
 )
 from app.config import ADMIN_PASSWORD, BASE_URL
 from app.qr_utils import generate_qr_base64
+from app.templates_config import create_templates
 
 router = APIRouter(prefix="/admin")
-templates = Jinja2Templates(directory="templates")
+templates = create_templates()
 
 
 # ── Admin login ──────────────────────────────────────────────────────────────
@@ -586,7 +587,7 @@ async def analytics_data(
         models.Transaction.type == "topup"
     ).scalar()
 
-    # Time series: bar revenue per hour
+    # Time series: bar revenue per hour (Paris time)
     bar_txs = (
         db.query(models.Transaction)
         .filter(models.Transaction.type == "drink")
@@ -595,10 +596,10 @@ async def analytics_data(
     )
     bar_by_hour: dict[str, int] = {}
     for tx in bar_txs:
-        hour_key = tx.created_at.strftime("%Y-%m-%d %H:00")
+        hour_key = to_paris(tx.created_at).strftime("%Y-%m-%d %H:00")
         bar_by_hour[hour_key] = bar_by_hour.get(hour_key, 0) + abs(tx.amount_cents)
 
-    # Time series: ticket purchases over time
+    # Time series: ticket purchases over time (Paris time)
     ticket_txs = (
         db.query(models.Transaction)
         .filter(models.Transaction.type == "ticket")
@@ -607,10 +608,19 @@ async def analytics_data(
     )
     tickets_by_day: dict[str, int] = {}
     for tx in ticket_txs:
-        day_key = tx.created_at.strftime("%Y-%m-%d")
+        day_key = to_paris(tx.created_at).strftime("%Y-%m-%d")
         tickets_by_day[day_key] = tickets_by_day.get(day_key, 0) + 1
 
-    # Topup by hour
+    # Ticket type breakdown (by description from HelloAsso items)
+    ticket_types: dict[str, dict] = {}
+    for tx in ticket_txs:
+        desc = tx.description or "Billet HelloAsso"
+        if desc not in ticket_types:
+            ticket_types[desc] = {"count": 0, "revenue_cents": 0}
+        ticket_types[desc]["count"] += 1
+        ticket_types[desc]["revenue_cents"] += tx.amount_cents
+
+    # Topup by hour (Paris time)
     topup_txs = (
         db.query(models.Transaction)
         .filter(models.Transaction.type == "topup")
@@ -619,7 +629,7 @@ async def analytics_data(
     )
     topup_by_hour: dict[str, int] = {}
     for tx in topup_txs:
-        hour_key = tx.created_at.strftime("%Y-%m-%d %H:00")
+        hour_key = to_paris(tx.created_at).strftime("%Y-%m-%d %H:00")
         topup_by_hour[hour_key] = topup_by_hour.get(hour_key, 0) + tx.amount_cents
 
     return JSONResponse({
@@ -633,4 +643,5 @@ async def analytics_data(
         "bar_by_hour": bar_by_hour,
         "tickets_by_day": tickets_by_day,
         "topup_by_hour": topup_by_hour,
+        "ticket_types": ticket_types,
     })

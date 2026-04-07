@@ -79,6 +79,11 @@
     </div>
 
     <div class="chart-card">
+      <h3>D&eacute;tail par type de billet</h3>
+      <div id="ticket-types-table"></div>
+    </div>
+
+    <div class="chart-card">
       <h3>Billets vendus par jour</h3>
       <div class="chart-container"><canvas id="chart-tickets-time"></canvas></div>
     </div>
@@ -147,6 +152,29 @@
           },
           options: { responsive: true, plugins: { legend: { display: false } } }
         });
+      }
+
+      // Ticket types breakdown table
+      if (d.ticket_types && Object.keys(d.ticket_types).length > 0) {
+        let html = '<table style="width:100%; border-collapse:collapse; font-size:0.92rem;">';
+        html += '<thead><tr style="border-bottom:2px solid var(--border); text-align:left;">';
+        html += '<th style="padding:8px 6px;">Type</th><th style="padding:8px 6px; text-align:center;">Qty</th><th style="padding:8px 6px; text-align:right;">CA</th></tr></thead><tbody>';
+        let totalQty = 0, totalRev = 0;
+        for (const [name, info] of Object.entries(d.ticket_types)) {
+          totalQty += info.count;
+          totalRev += info.revenue_cents;
+          html += `<tr style="border-bottom:1px solid var(--border);">`;
+          html += `<td style="padding:8px 6px;">${name}</td>`;
+          html += `<td style="padding:8px 6px; text-align:center;">${info.count}</td>`;
+          html += `<td style="padding:8px 6px; text-align:right; font-weight:600;">${(info.revenue_cents / 100).toFixed(0)} \u20ac</td>`;
+          html += `</tr>`;
+        }
+        html += `<tr style="border-top:2px solid var(--primary); font-weight:700;">`;
+        html += `<td style="padding:8px 6px;">Total</td>`;
+        html += `<td style="padding:8px 6px; text-align:center;">${totalQty}</td>`;
+        html += `<td style="padding:8px 6px; text-align:right;">${(totalRev / 100).toFixed(0)} \u20ac</td>`;
+        html += `</tr></tbody></table>`;
+        document.getElementById('ticket-types-table').innerHTML = html;
       }
 
       // Tickets over time

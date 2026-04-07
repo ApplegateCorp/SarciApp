@@ -1,15 +1,15 @@
 import stripe
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models
 from app.auth import get_current_user, get_current_user_or_redirect
 from app.config import STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, BASE_URL
+from app.templates_config import create_templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
+templates = create_templates()
 stripe.api_key = STRIPE_SECRET_KEY
 
 TOPUP_AMOUNTS = [5, 10, 20, 30, 50]

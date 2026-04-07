@@ -47,7 +47,7 @@
   <div style="background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:10px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
       <span style="font-size:0.78rem; color:var(--text-muted);">
-        {{ tx.created_at.strftime('%d/%m/%Y &agrave; %H:%M') }}
+        {{ (tx.created_at|paris).strftime('%d/%m/%Y &agrave; %H:%M') }}
       </span>
       <span style="font-family:'Playfair Display',serif; font-weight:700; font-size:1.1rem; color:var(--error);">
         -{{ "%.2f"|format(tx.amount_cents|abs / 100) }} &euro;
@@ -81,7 +81,7 @@
           {% endif %}
           {{ tx.description }}
         </span>
-        <span class="tx-date">{{ tx.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+        <span class="tx-date">{{ (tx.created_at|paris).strftime('%d/%m/%Y %H:%M') }}</span>
       </div>
       <span class="tx-amount">
         {% if tx.amount_cents > 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} &euro;

@@ -14,12 +14,15 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def _extract_payer_info(payload: dict) -> tuple[str, str]:
+def _extract_payer_info(payload: dict) -> tuple[str, str, list[dict]]:
     """
-    Extract email and name from HelloAsso webhook payload.
+    Extract email, name, and ticket items from HelloAsso webhook payload.
     Supports both notification formats:
     - Wrapper format: { "eventType": "Order", "data": { "payer": { ... } } }
     - Direct format: { "payer": { ... }, "items": [...] }
+
+    Returns (email, full_name, items) where items is a list of
+    {"name": "Monkey Pass - 2 Jours", "amount": 9000} dicts.
     """
     # Wrapper format (eventType + data)
     data = payload.get("data", payload)
@@ -30,7 +33,15 @@ def _extract_payer_info(payload: dict) -> tuple[str, str]:
     last_name = payer.get("lastName", "")
     full_name = f"{first_name} {last_name}".strip()
 
-    return email, full_name
+    # Extract ticket items
+    raw_items = data.get("items", [])
+    items = []
+    for item in raw_items:
+        item_name = item.get("name", "Billet")
+        item_amount = item.get("amount", 0)  # in cents
+        items.append({"name": item_name, "amount": item_amount})
+
+    return email, full_name, items
 
 
 @router.post("/webhooks/helloasso")
@@ -57,7 +68,7 @@ async def helloasso_webhook(request: Request, db: Session = Depends(get_db)):
         logger.info(f"HelloAsso webhook: skipping event type '{event_type}'")
         return JSONResponse({"ok": True, "skipped": True})
 
-    email, full_name = _extract_payer_info(payload)
+    email, full_name, items = _extract_payer_info(payload)
 
     if not email:
         logger.warning(f"HelloAsso webhook: no payer email found in payload")
@@ -83,16 +94,28 @@ async def helloasso_webhook(request: Request, db: Session = Depends(get_db)):
         )
         db.add(user)
 
-    # Record transaction
+    # Record transaction — use item details from HelloAsso
     data = payload.get("data", payload)
     amount = data.get("amount", {})
     amount_cents = amount.get("total", 0) if isinstance(amount, dict) else 0
+
+    # Build description from ticket items
+    if items:
+        desc_parts = [item["name"] for item in items]
+        description = ", ".join(desc_parts)
+        # Use items total if available
+        items_total = sum(item["amount"] for item in items)
+        if items_total > 0:
+            amount_cents = items_total
+    else:
+        description = "Billet HelloAsso"
+
     db.flush()
     transaction = models.Transaction(
         user_id=user.id,
         amount_cents=amount_cents,
         type="ticket",
-        description="Billet HelloAsso",
+        description=description,
     )
     db.add(transaction)
     db.commit()

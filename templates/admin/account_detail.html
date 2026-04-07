@@ -143,7 +143,7 @@
         <span class="{% if tx.amount_cents >= 0 %}tx-amount-pos{% else %}tx-amount-neg{% endif %}">
           {% if tx.amount_cents >= 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} &euro;
         </span>
-        <span class="tx-date">{{ tx.created_at.strftime('%d/%m %H:%M') }}</span>
+        <span class="tx-date">{{ (tx.created_at|paris).strftime('%d/%m %H:%M') }}</span>
       </div>
       {% endfor %}
     </div>
