@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Creer mon compte — Repeat the Monkey #3{% endblock %}
+{% block title %}Créer mon compte — Repeat the Monkey #3{% endblock %}
 {% block content %}
 
 <div class="ticket-flow">
@@ -34,38 +34,38 @@
       <div class="ticket-stub-qr">
         <div class="ticket-stub-qr-placeholder">
           <span>QR code</span>
-          <span class="ticket-stub-qr-hint">recu par email</span>
+          <span class="ticket-stub-qr-hint">reçu par email</span>
         </div>
       </div>
     </div>
-    <p class="ticket-flow-hint">Votre QR code sera disponible des la creation de votre compte.</p>
+    <p class="ticket-flow-hint">Votre QR code sera disponible dès la création de votre compte.</p>
   </div>
 
   <!-- Right: form -->
   <div class="ticket-flow-form">
-    <h1>Creer mon compte</h1>
-    <p class="form-sub">Utilisez le meme email que sur HelloAsso pour retrouver votre billet.</p>
+    <h1>Créer mon compte</h1>
+    <p class="form-sub">Utilisez le même email que sur HelloAsso pour retrouver votre billet.</p>
 
     {% if error %}
-    <div class="alert alert-error">{{ error }} <a href="/forgot-password">Mot de passe oublie ?</a></div>
+    <div class="alert alert-error">{{ error }} <a href="/forgot-password">Mot de passe oublié ?</a></div>
     {% endif %}
 
     <form method="post" action="/register" class="card-form">
-      <label>Prenom et nom
+      <label>Prénom et nom
         <input type="text" name="name" required placeholder="Jean Dupont" autofocus />
       </label>
       <label>Adresse email
         <input type="email" name="email" required placeholder="jean@example.com" />
       </label>
       <label>Mot de passe
-        <input type="password" name="password" required minlength="8" placeholder="Au moins 8 caracteres" />
+        <input type="password" name="password" required minlength="8" placeholder="Au moins 8 caractères" />
       </label>
       <button type="submit" class="btn-primary btn-full btn-lg">
-        Creer mon compte
+        Créer mon compte
       </button>
     </form>
 
-    <p class="form-footer">Deja inscrit ? <a href="/login">Se connecter</a></p>
+    <p class="form-footer">Déjà inscrit ? <a href="/login">Se connecter</a></p>
   </div>
 
 </div>

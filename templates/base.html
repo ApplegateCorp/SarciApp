@@ -32,7 +32,7 @@
         {% if user.is_admin or user.is_sub_admin %}
         <a href="/admin/dashboard" class="nav-link-subtle">Admin</a>
         {% endif %}
-        <a href="/logout" class="nav-link-subtle">Deconnexion</a>
+        <a href="/logout" class="nav-link-subtle">Déconnexion</a>
       {% else %}
         <a href="/login" class="nav-link-subtle">Connexion</a>
         <a href="/register" class="nav-cta">Billets</a>
@@ -51,7 +51,7 @@
       {% if user and user.ticket_purchased %}
       <a href="/wallet" class="footer-cta">Recharger son compte</a>
       {% else %}
-      <a href="/register" class="footer-cta">Creer mon compte</a>
+      <a href="/register" class="footer-cta">Créer mon compte</a>
       {% endif %}
     </div>
   </footer>

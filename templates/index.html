@@ -14,7 +14,7 @@
     <div class="hero-actions">
       {% if not user %}
         <a href="/register" class="btn-hero">Prendre mon billet</a>
-        <a href="/login" class="btn-hero-ghost">J'ai deja un compte</a>
+        <a href="/login" class="btn-hero-ghost">J'ai déjà un compte</a>
       {% elif not user.ticket_purchased %}
         <a href="/ticket" class="btn-hero">Prendre mon billet</a>
         <a href="/wallet" class="btn-hero-ghost">Recharger mon compte</a>
@@ -24,7 +24,7 @@
       {% endif %}
     </div>
   </div>
-  <a href="#discover" class="scroll-hint" aria-label="Decouvrir">
+  <a href="#discover" class="scroll-hint" aria-label="Découvrir">
     <span class="scroll-arrow">&darr;</span>
   </a>
 </section>
@@ -33,12 +33,12 @@
 <section id="discover" class="manifesto-section">
   <div class="manifesto-inner">
     <p class="manifesto-text">
-      Une ferme isolee, des copain&middot;es<br>
-      et le monde reel qui s'efface pendant 72h.
+      Une ferme isolée, des copain&middot;es<br>
+      et le monde réel qui s'efface pendant 72h.
     </p>
     <p class="manifesto-text manifesto-text--sm">
-      Une parenthese hors du temps, un jardin intimiste et bienveillant<br>
-      ou l'on danse au gre des tracks envoutantes.
+      Une parenthèse hors du temps, un jardin intimiste et bienveillant<br>
+      où l'on danse au gré des tracks envoûtantes.
     </p>
   </div>
 </section>
@@ -51,7 +51,7 @@
       <div class="feature-block">
         <div class="feature-num">01</div>
         <h3>Votre billet</h3>
-        <p>Achetez sur HelloAsso, creez votre compte ici pour obtenir votre QR code d'entree et de bar.</p>
+        <p>Achetez sur HelloAsso, créez votre compte ici pour obtenir votre QR code d'entrée et de bar.</p>
         {% if not user %}
         <a href="/register" class="btn-feature">Billetterie</a>
         {% elif not user.ticket_purchased %}
@@ -62,7 +62,7 @@
       <div class="feature-block">
         <div class="feature-num">02</div>
         <h3>Compte bar</h3>
-        <p>Rechargez votre compte a tout moment. Au bar, un scan de votre QR et c'est regle.</p>
+        <p>Rechargez votre compte à tout moment. Au bar, un scan de votre QR et c'est réglé.</p>
         {% if user %}
         <a href="/wallet" class="btn-feature">Recharger</a>
         {% endif %}
@@ -71,7 +71,7 @@
       <div class="feature-block">
         <div class="feature-num">03</div>
         <h3>100% mobile</h3>
-        <p>Tout depuis votre telephone. Aucune application a installer.</p>
+        <p>Tout depuis votre téléphone. Aucune application à installer.</p>
         <a href="/info" class="btn-feature">Infos pratiques</a>
       </div>
 
@@ -105,7 +105,7 @@
     {% if user and user.ticket_purchased %}
     <a href="/wallet" class="footer-cta">Recharger son compte</a>
     {% else %}
-    <a href="/register" class="footer-cta">Creer mon compte</a>
+    <a href="/register" class="footer-cta">Créer mon compte</a>
     {% endif %}
   </div>
 </footer>

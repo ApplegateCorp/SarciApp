@@ -16,10 +16,10 @@ def send_reset_email(to_email: str, name: str, reset_link: str):
         <p style="color: rgba(255,255,255,0.5); margin: 4px 0 0; font-size: 12px;">3 - 4 - 5 Juillet 2026</p>
       </div>
       <div style="background: #ffffff; padding: 28px; border: 1px solid #D1D9C8; border-top: none; border-radius: 0 0 12px 12px;">
-        <h2 style="color: #2C2C2C; margin: 0 0 8px; font-size: 18px;">Reinitialiser votre mot de passe</h2>
+        <h2 style="color: #2C2C2C; margin: 0 0 8px; font-size: 18px;">Réinitialiser votre mot de passe</h2>
         <p style="color: #6B6B6B;">Bonjour <strong style="color:#2C2C2C;">{name}</strong>,</p>
         <p style="color: #6B6B6B;">
-          Cliquez sur le bouton ci-dessous pour definir un nouveau mot de passe.
+          Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe.
           Ce lien est valable <strong>15 minutes</strong>.
         </p>
 
@@ -106,7 +106,7 @@ def send_welcome_email(to_email: str, name: str, has_account: bool):
           </p>
           <ol style="color: #6B6B6B; font-size: 13px; margin: 0; padding-left: 18px; line-height: 1.8;">
             <li>Cree ton compte sur <a href="{BASE_URL}" style="color: #3D6B4F;">{BASE_URL.replace('https://', '')}</a></li>
-            <li>Ton QR code personnel est genere automatiquement</li>
+            <li>Ton QR code personnel est généré automatiquement</li>
             <li>Recharge ton solde bar en ligne (avant ou pendant le festival)</li>
             <li>Au bar, le barman scanne ton QR code pour deduire tes consos</li>
           </ol>
