@@ -60,19 +60,6 @@ def send_welcome_email(to_email: str, name: str, has_account: bool):
 
     resend.api_key = RESEND_API_KEY
 
-    if has_account:
-        cta_text = "Accéder à mon compte"
-        cta_url = f"{BASE_URL}/ticket"
-        account_msg = "Ton compte est déjà actif et ton billet a été associé automatiquement."
-    else:
-        cta_text = "Créer mon compte"
-        cta_url = f"{BASE_URL}/register"
-        account_msg = (
-            "Crée ton compte sur la plateforme avec <strong>le même email que celui "
-            "utilisé sur HelloAsso</strong> pour retrouver ton billet et activer "
-            "ton QR code."
-        )
-
     html = f"""
     <div style="font-family: 'Roboto', -apple-system, sans-serif; max-width: 600px; margin: auto; padding: 24px;">
       <div style="background: #2C2C2C; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
@@ -86,18 +73,29 @@ def send_welcome_email(to_email: str, name: str, has_account: bool):
           Merci pour ton achat sur HelloAsso ! Ton billet pour
           <strong style="color:#2C2C2C;">Repeat the Monkey #3</strong> est confirmé.
         </p>
-
-        <p style="color: #6B6B6B;">{account_msg}</p>
+        <p style="color: #6B6B6B;">Ton compte est déjà actif et ton billet a été associé automatiquement.</p>
 
         <div style="text-align: center; margin: 28px 0;">
-          <a href="{cta_url}" style="
+          <a href="{BASE_URL}/ticket" style="
             background: #3D6B4F; color: white; padding: 14px 28px;
             border-radius: 50px; text-decoration: none; font-weight: 500;
             font-size: 14px; display: inline-block;
-          ">{cta_text}</a>
+          ">Accéder à mon compte</a>
         </div>
 
-        <div style="background: #EEF2E8; border: 1px solid #D1D9C8; border-radius: 10px; padding: 16px; margin-top: 20px;">
+        <div style="background: #FFF8EE; border: 1px solid #E8D5B8; border-radius: 10px; padding: 16px; margin-top: 20px;">
+          <p style="color: #2C2C2C; font-weight: 500; margin: 0 0 6px; font-size: 14px;">
+            Tu n'as pas encore de compte ?
+          </p>
+          <p style="color: #6B6B6B; margin: 0; font-size: 13px;">
+            Un compte a été créé automatiquement avec l'email de ton achat HelloAsso.
+            Pour y accéder, va sur <a href="{BASE_URL}/login" style="color: #3D6B4F;">{BASE_URL.replace('https://', '')}/login</a>
+            et clique sur <a href="{BASE_URL}/forgot-password" style="color: #3D6B4F; font-weight: 600;">Mot de passe oublié</a>
+            pour définir ton mot de passe.
+          </p>
+        </div>
+
+        <div style="background: #EEF2E8; border: 1px solid #D1D9C8; border-radius: 10px; padding: 16px; margin-top: 12px;">
           <p style="color: #2C2C2C; font-weight: 500; margin: 0 0 6px; font-size: 14px;">
             Comment ça marche ?
           </p>
@@ -105,7 +103,7 @@ def send_welcome_email(to_email: str, name: str, has_account: bool):
             Le festival utilise une plateforme en ligne pour le bar :
           </p>
           <ol style="color: #6B6B6B; font-size: 13px; margin: 0; padding-left: 18px; line-height: 1.8;">
-            <li>Crée ton compte sur <a href="{BASE_URL}" style="color: #3D6B4F;">{BASE_URL.replace('https://', '')}</a></li>
+            <li>Connecte-toi sur <a href="{BASE_URL}" style="color: #3D6B4F;">{BASE_URL.replace('https://', '')}</a></li>
             <li>Ton QR code personnel est généré automatiquement</li>
             <li>Recharge ton solde bar en ligne (avant ou pendant le festival)</li>
             <li>Au bar, le barman scanne ton QR code pour déduire tes consos</li>
