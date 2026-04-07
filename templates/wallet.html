@@ -39,7 +39,11 @@
         <span class="tx-date">{{ tx.created_at.strftime('%d/%m %H:%M') }}</span>
       </div>
       <span class="tx-amount">
-        {% if tx.amount_cents > 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} EUR
+        {% if tx.type == "ticket" %}
+          —
+        {% else %}
+          {% if tx.amount_cents > 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} EUR
+        {% endif %}
       </span>
     </div>
     {% endfor %}
