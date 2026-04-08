@@ -14,17 +14,23 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _normalize_ticket_type(name: str) -> str:
+    """Normalize HelloAsso tier name to a simple category."""
+    lower = name.lower()
+    if "vendredi" in lower or "friday" in lower:
+        return "1 Jour Vendredi"
+    elif "samedi" in lower or "saturday" in lower:
+        return "1 Jour Samedi"
+    else:
+        return "Pass 2 Jours"
+
+
 def _extract_payer_info(payload: dict) -> tuple[str, str, list[dict]]:
     """
     Extract email, name, and ticket items from HelloAsso webhook payload.
-    Supports both notification formats:
-    - Wrapper format: { "eventType": "Order", "data": { "payer": { ... } } }
-    - Direct format: { "payer": { ... }, "items": [...] }
-
     Returns (email, full_name, items) where items is a list of
     {"name": "Monkey Pass - 2 Jours", "amount": 9000} dicts.
     """
-    # Wrapper format (eventType + data)
     data = payload.get("data", payload)
     payer = data.get("payer", {})
 
@@ -33,12 +39,11 @@ def _extract_payer_info(payload: dict) -> tuple[str, str, list[dict]]:
     last_name = payer.get("lastName", "")
     full_name = f"{first_name} {last_name}".strip()
 
-    # Extract ticket items
     raw_items = data.get("items", [])
     items = []
     for item in raw_items:
         item_name = item.get("name", "Billet")
-        item_amount = item.get("amount", 0)  # in cents
+        item_amount = item.get("amount", 0)
         items.append({"name": item_name, "amount": item_amount})
 
     return email, full_name, items
@@ -48,7 +53,6 @@ def _extract_payer_info(payload: dict) -> tuple[str, str, list[dict]]:
 async def helloasso_webhook(request: Request, db: Session = Depends(get_db)):
     """Receive HelloAsso order/payment notifications."""
 
-    # ── Verify shared secret ────────────────────────────────────────────
     if HELLOASSO_WEBHOOK_SECRET:
         provided_secret = request.headers.get("x-helloasso-secret", "")
         if provided_secret != HELLOASSO_WEBHOOK_SECRET:
@@ -59,10 +63,8 @@ async def helloasso_webhook(request: Request, db: Session = Depends(get_db)):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON")
 
-    # Log the full payload so we can debug format issues
     logger.info(f"HelloAsso webhook received: {payload}")
 
-    # Accept Order and Payment event types (or no eventType for direct format)
     event_type = payload.get("eventType", "")
     if event_type and event_type not in ("Order", "Payment"):
         logger.info(f"HelloAsso webhook: skipping event type '{event_type}'")
@@ -74,7 +76,7 @@ async def helloasso_webhook(request: Request, db: Session = Depends(get_db)):
         logger.warning(f"HelloAsso webhook: no payer email found in payload")
         return JSONResponse({"ok": True, "skipped": True})
 
-    # ── Look up or create user ──────────────────────────────────────────
+    # ── Look up or create buyer ─────────────────────────────────────────
     user = db.query(models.User).filter(models.User.email == email).first()
     has_account = user is not None
 
@@ -94,30 +96,52 @@ async def helloasso_webhook(request: Request, db: Session = Depends(get_db)):
         )
         db.add(user)
 
-    # Record transaction — use item details from HelloAsso
-    data = payload.get("data", payload)
-    amount = data.get("amount", {})
-    amount_cents = amount.get("total", 0) if isinstance(amount, dict) else 0
-
-    # Build description from ticket items
-    if items:
-        desc_parts = [item["name"] for item in items]
-        description = ", ".join(desc_parts)
-        # Use items total if available
-        items_total = sum(item["amount"] for item in items)
-        if items_total > 0:
-            amount_cents = items_total
-    else:
-        description = "Billet HelloAsso"
-
     db.flush()
-    transaction = models.Transaction(
-        user_id=user.id,
-        amount_cents=amount_cents,
-        type="ticket",
-        description=description,
-    )
-    db.add(transaction)
+
+    # ── Process each ticket item ────────────────────────────────────────
+    if not items:
+        # Fallback: no items parsed, record as single ticket
+        data = payload.get("data", payload)
+        amount = data.get("amount", {})
+        amount_cents = amount.get("total", 0) if isinstance(amount, dict) else 0
+        tx = models.Transaction(
+            user_id=user.id,
+            amount_cents=amount_cents,
+            type="ticket",
+            description=_normalize_ticket_type(""),
+        )
+        db.add(tx)
+    else:
+        # First item → buyer's own ticket
+        first = items[0]
+        ticket_type = _normalize_ticket_type(first["name"])
+        tx = models.Transaction(
+            user_id=user.id,
+            amount_cents=first["amount"],
+            type="ticket",
+            description=ticket_type,
+        )
+        db.add(tx)
+
+        # Additional items → pending tickets to assign
+        for item in items[1:]:
+            item_type = _normalize_ticket_type(item["name"])
+            # Record the transaction on the buyer for accounting
+            extra_tx = models.Transaction(
+                user_id=user.id,
+                amount_cents=item["amount"],
+                type="ticket",
+                description=item_type,
+            )
+            db.add(extra_tx)
+            # Create pending ticket for assignment
+            pending = models.PendingTicket(
+                buyer_id=user.id,
+                ticket_type=item_type,
+                amount_cents=item["amount"],
+            )
+            db.add(pending)
+
     db.commit()
     db.refresh(user)
 
@@ -127,5 +151,9 @@ async def helloasso_webhook(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"HelloAsso webhook: failed to send welcome email: {e}")
 
-    logger.info(f"HelloAsso webhook: ticket activated for {email}")
-    return JSONResponse({"ok": True, "user_id": user.id, "ticket_activated": True})
+    pending_count = len(items) - 1 if len(items) > 1 else 0
+    logger.info(f"HelloAsso webhook: ticket activated for {email}, {pending_count} pending tickets to assign")
+    return JSONResponse({
+        "ok": True, "user_id": user.id, "ticket_activated": True,
+        "pending_tickets": pending_count,
+    })

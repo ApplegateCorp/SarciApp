@@ -5,6 +5,10 @@
 <div class="ticket-page">
   <h1>Billetterie</h1>
 
+  {% if assign_error %}
+  <div class="alert alert-error">{{ assign_error }}</div>
+  {% endif %}
+
   {% if user.ticket_purchased %}
   <!-- ── Ticket avec QR code ──────────────────────────────────────────── -->
   <div class="ticket-card">
@@ -23,6 +27,32 @@
     </div>
     <a href="/wallet" class="btn-primary btn-full">Recharger mon compte bar</a>
   </div>
+
+  <!-- ── Billets à attribuer ──────────────────────────────────────────── -->
+  {% if pending_tickets %}
+  <div class="ticket-card" style="margin-top: 24px;">
+    <div class="ticket-header">
+      <h2>Billets à attribuer</h2>
+      <p>Vous avez {{ pending_tickets|length }} billet{{ 's' if pending_tickets|length > 1 }} à attribuer. Indiquez l'email et le nom de chaque personne.</p>
+    </div>
+
+    {% for pt in pending_tickets %}
+    <form method="post" action="/assign-ticket" class="card-form" style="margin-top: 16px; padding: 20px; background: var(--cream); border-radius: var(--radius); border: 1.5px solid var(--border);">
+      <input type="hidden" name="ticket_id" value="{{ pt.id }}" />
+      <p style="font-weight: 600; margin-bottom: 12px;">🎟 {{ pt.ticket_type }}</p>
+      <label>Prénom et nom
+        <input type="text" name="name" required placeholder="Jean Dupont" />
+      </label>
+      <label>Adresse email
+        <input type="email" name="email" required placeholder="jean@example.com" />
+      </label>
+      <button type="submit" class="btn-primary btn-full" style="margin-top: 8px;">
+        Attribuer ce billet
+      </button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endif %}
 
   {% else %}
   <!-- ── Pas encore de billet → HelloAsso ────────────────────────────── -->

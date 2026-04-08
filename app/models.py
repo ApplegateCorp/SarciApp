@@ -48,6 +48,21 @@ class Transaction(Base):
     user = relationship("User", back_populates="transactions")
 
 
+class PendingTicket(Base):
+    __tablename__ = "pending_tickets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    buyer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    recipient_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    ticket_type = Column(String, nullable=False)       # e.g. "Monkey Pass - 2 Jours"
+    amount_cents = Column(Integer, default=0)
+    assigned = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    buyer = relationship("User", foreign_keys=[buyer_id], backref="pending_tickets_bought")
+    recipient = relationship("User", foreign_keys=[recipient_id])
+
+
 class DrinkItem(Base):
     __tablename__ = "drink_items"
 

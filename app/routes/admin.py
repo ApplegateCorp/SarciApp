@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from app.templates_config import to_paris
+from app.routes.helloasso import _normalize_ticket_type
 from app.database import get_db
 from app import models
 from app.auth import (
@@ -611,14 +612,14 @@ async def analytics_data(
         day_key = to_paris(tx.created_at).strftime("%Y-%m-%d")
         tickets_by_day[day_key] = tickets_by_day.get(day_key, 0) + 1
 
-    # Ticket type breakdown (by description from HelloAsso items)
+    # Ticket type breakdown — normalize to Vendredi / Samedi / 2 Jours
     ticket_types: dict[str, dict] = {}
     for tx in ticket_txs:
-        desc = tx.description or "Billet HelloAsso"
-        if desc not in ticket_types:
-            ticket_types[desc] = {"count": 0, "revenue_cents": 0}
-        ticket_types[desc]["count"] += 1
-        ticket_types[desc]["revenue_cents"] += tx.amount_cents
+        category = _normalize_ticket_type(tx.description or "")
+        if category not in ticket_types:
+            ticket_types[category] = {"count": 0, "revenue_cents": 0}
+        ticket_types[category]["count"] += 1
+        ticket_types[category]["revenue_cents"] += tx.amount_cents
 
     # Topup by hour (Paris time)
     topup_txs = (
