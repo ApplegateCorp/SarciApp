@@ -26,6 +26,11 @@ def _run_migrations():
                 conn.execute(text("ALTER TABLE users ADD COLUMN is_sub_admin BOOLEAN DEFAULT FALSE"))
             if "is_scanner" not in columns:
                 conn.execute(text("ALTER TABLE users ADD COLUMN is_scanner BOOLEAN DEFAULT FALSE"))
+    if "transactions" in inspector.get_table_names():
+        tx_columns = [col["name"] for col in inspector.get_columns("transactions")]
+        with engine.begin() as conn:
+            if "paid" not in tx_columns:
+                conn.execute(text("ALTER TABLE transactions ADD COLUMN paid BOOLEAN DEFAULT TRUE"))
 
 _run_migrations()
 

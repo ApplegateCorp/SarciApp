@@ -63,9 +63,10 @@ async def dashboard(
     ticket_count = db.query(models.User).filter(models.User.ticket_purchased == True).count()
     scanned_count = db.query(models.User).filter(models.User.ticket_scanned == True).count()
 
-    # Revenue stats
+    # Revenue stats — only count paid tickets
     ticket_revenue = db.query(func.coalesce(func.sum(models.Transaction.amount_cents), 0)).filter(
-        models.Transaction.type == "ticket"
+        models.Transaction.type == "ticket",
+        models.Transaction.paid == True,
     ).scalar()
     bar_revenue = db.query(func.coalesce(func.sum(models.Transaction.amount_cents), 0)).filter(
         models.Transaction.type == "drink"
@@ -116,19 +117,29 @@ async def accounts_page(
 
     users = query.order_by(models.User.created_at.desc()).all()
 
+    # Pending tickets not yet assigned
+    pending_tickets = (
+        db.query(models.PendingTicket)
+        .filter(models.PendingTicket.assigned == False)
+        .all()
+    )
+
     # Counts for filter badges
+    pending_count = len(pending_tickets)
     counts = {
         "all": db.query(models.User).count(),
         "no_ticket": db.query(models.User).filter(models.User.ticket_purchased == False).count(),
         "has_ticket": db.query(models.User).filter(models.User.ticket_purchased == True).count(),
         "validated": db.query(models.User).filter(models.User.ticket_scanned == True).count(),
         "not_validated": db.query(models.User).filter(models.User.ticket_purchased == True, models.User.ticket_scanned == False).count(),
+        "pending": pending_count,
     }
 
     return templates.TemplateResponse("admin/accounts.html", {
         "request": request,
         "admin": admin,
         "users": users,
+        "pending_tickets": pending_tickets,
         "filter": filter,
         "q": q,
         "counts": counts,
@@ -169,20 +180,26 @@ async def account_detail(
 @router.post("/accounts/{user_id}/grant-ticket")
 async def grant_ticket(
     user_id: int,
+    ticket_type: str = Form("Pass 2 Jours"),
+    paid: str = Form("non"),
+    amount: float = Form(0),
     admin: models.User = Depends(require_admin_or_sub),
     db: Session = Depends(get_db),
 ):
-    """Grant a free ticket (pass) to a user."""
+    """Grant a ticket to a user (paid or gifted)."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404)
     if not user.ticket_purchased:
+        is_paid = paid == "oui"
+        amount_cents = int(amount * 100) if is_paid else 0
         user.ticket_purchased = True
         tx = models.Transaction(
             user_id=user.id,
-            amount_cents=0,
+            amount_cents=amount_cents,
             type="ticket",
-            description="Pass offert (admin)",
+            description=ticket_type,
+            paid=is_paid,
         )
         db.add(tx)
         db.commit()
@@ -579,7 +596,8 @@ async def analytics_data(
     ticket_count = db.query(models.User).filter(models.User.ticket_purchased == True).count()
     ticket_validated = db.query(models.User).filter(models.User.ticket_scanned == True).count()
     ticket_revenue = db.query(func.coalesce(func.sum(models.Transaction.amount_cents), 0)).filter(
-        models.Transaction.type == "ticket"
+        models.Transaction.type == "ticket",
+        models.Transaction.paid == True,
     ).scalar()
     bar_revenue_total = abs(db.query(func.coalesce(func.sum(models.Transaction.amount_cents), 0)).filter(
         models.Transaction.type == "drink"
@@ -613,13 +631,20 @@ async def analytics_data(
         tickets_by_day[day_key] = tickets_by_day.get(day_key, 0) + 1
 
     # Ticket type breakdown — normalize to Vendredi / Samedi / 2 Jours
+    # Only count paid tickets in revenue
     ticket_types: dict[str, dict] = {}
+    gifted_count = 0
     for tx in ticket_txs:
         category = _normalize_ticket_type(tx.description or "")
         if category not in ticket_types:
-            ticket_types[category] = {"count": 0, "revenue_cents": 0}
+            ticket_types[category] = {"count": 0, "paid_count": 0, "revenue_cents": 0, "gifted_count": 0}
         ticket_types[category]["count"] += 1
-        ticket_types[category]["revenue_cents"] += tx.amount_cents
+        if tx.paid:
+            ticket_types[category]["paid_count"] += 1
+            ticket_types[category]["revenue_cents"] += tx.amount_cents
+        else:
+            ticket_types[category]["gifted_count"] += 1
+            gifted_count += 1
 
     # Topup by hour (Paris time)
     topup_txs = (
@@ -645,4 +670,5 @@ async def analytics_data(
         "tickets_by_day": tickets_by_day,
         "topup_by_hour": topup_by_hour,
         "ticket_types": ticket_types,
+        "gifted_count": gifted_count,
     })

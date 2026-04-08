@@ -158,20 +158,26 @@
       if (d.ticket_types && Object.keys(d.ticket_types).length > 0) {
         let html = '<table style="width:100%; border-collapse:collapse; font-size:0.92rem;">';
         html += '<thead><tr style="border-bottom:2px solid var(--border); text-align:left;">';
-        html += '<th style="padding:8px 6px;">Type</th><th style="padding:8px 6px; text-align:center;">Qty</th><th style="padding:8px 6px; text-align:right;">CA</th></tr></thead><tbody>';
-        let totalQty = 0, totalRev = 0;
+        html += '<th style="padding:8px 6px;">Type</th><th style="padding:8px 6px; text-align:center;">Pay\u00e9s</th><th style="padding:8px 6px; text-align:center;">Offerts</th><th style="padding:8px 6px; text-align:center;">Total</th><th style="padding:8px 6px; text-align:right;">CA</th></tr></thead><tbody>';
+        let totalPaid = 0, totalGifted = 0, totalAll = 0, totalRev = 0;
         for (const [name, info] of Object.entries(d.ticket_types)) {
-          totalQty += info.count;
+          totalPaid += info.paid_count;
+          totalGifted += info.gifted_count;
+          totalAll += info.count;
           totalRev += info.revenue_cents;
           html += `<tr style="border-bottom:1px solid var(--border);">`;
           html += `<td style="padding:8px 6px;">${name}</td>`;
-          html += `<td style="padding:8px 6px; text-align:center;">${info.count}</td>`;
+          html += `<td style="padding:8px 6px; text-align:center;">${info.paid_count}</td>`;
+          html += `<td style="padding:8px 6px; text-align:center; color:var(--text-muted);">${info.gifted_count}</td>`;
+          html += `<td style="padding:8px 6px; text-align:center; font-weight:600;">${info.count}</td>`;
           html += `<td style="padding:8px 6px; text-align:right; font-weight:600;">${(info.revenue_cents / 100).toFixed(0)} \u20ac</td>`;
           html += `</tr>`;
         }
         html += `<tr style="border-top:2px solid var(--primary); font-weight:700;">`;
         html += `<td style="padding:8px 6px;">Total</td>`;
-        html += `<td style="padding:8px 6px; text-align:center;">${totalQty}</td>`;
+        html += `<td style="padding:8px 6px; text-align:center;">${totalPaid}</td>`;
+        html += `<td style="padding:8px 6px; text-align:center;">${totalGifted}</td>`;
+        html += `<td style="padding:8px 6px; text-align:center;">${totalAll}</td>`;
         html += `<td style="padding:8px 6px; text-align:right;">${(totalRev / 100).toFixed(0)} \u20ac</td>`;
         html += `</tr></tbody></table>`;
         document.getElementById('ticket-types-table').innerHTML = html;

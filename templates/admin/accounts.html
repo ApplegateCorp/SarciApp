@@ -118,6 +118,24 @@
       </a>
     </div>
 
+    <!-- Pending tickets (not yet assigned) -->
+    {% if pending_tickets %}
+    <div style="margin-bottom: 20px;">
+      <h2 style="font-size: 1.05rem; margin-bottom: 10px;">Billets non attribu&eacute;s</h2>
+      {% for pt in pending_tickets %}
+      <div class="account-row" style="cursor: default; border-color: var(--orange); background: #fffaf5;">
+        <div class="account-info">
+          <h3 style="color: var(--text-muted);">&#x1F3AB; {{ pt.ticket_type }}</h3>
+          <span class="email" style="font-style: italic;">&Agrave; identifier par {{ pt.buyer.name }}</span>
+          <div class="account-badges" style="margin-top:4px;">
+            <span class="badge-sm" style="background:#fff8ee; color:var(--orange); border:1px solid var(--orange);">En attente</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Account list -->
     {% for u in users %}
     <a href="/admin/accounts/{{ u.id }}" class="account-row">

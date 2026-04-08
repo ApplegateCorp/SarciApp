@@ -42,6 +42,7 @@ class Transaction(Base):
     amount_cents = Column(Integer, nullable=False)  # Positive = credit, Negative = debit
     type = Column(String, nullable=False)           # "topup", "drink", "ticket"
     description = Column(String, default="")
+    paid = Column(Boolean, default=True)              # False = admin-gifted, True = paid (HelloAsso/Stripe)
     stripe_session_id = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
