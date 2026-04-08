@@ -1,4 +1,6 @@
 import os
+import time
+import logging
 from sqlalchemy import text, inspect
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
@@ -8,7 +10,27 @@ from app import models
 from app.auth import RedirectToLogin, hash_password
 from app.routes import auth, tickets, wallet, admin, webhooks, helloasso
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="Repeat the Monkey #3")
+
+
+def _wait_for_db(max_retries: int = 10, delay: int = 3):
+    """Wait for the database to become available."""
+    for attempt in range(1, max_retries + 1):
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            logger.info("Database connection established.")
+            return
+        except Exception as e:
+            logger.warning(f"DB connection attempt {attempt}/{max_retries} failed: {e}")
+            if attempt < max_retries:
+                time.sleep(delay)
+    raise RuntimeError("Could not connect to database after multiple retries.")
+
+
+_wait_for_db()
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
