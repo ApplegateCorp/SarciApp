@@ -571,6 +571,201 @@ async def remove_sub_admin(user_id: int, admin=Depends(require_admin_or_sub), db
     return RedirectResponse("/admin/sub-admins", status_code=302)
 
 
+# ── One-time data fix ───────────────────────────────────────────────────────
+
+# Known unit prices in cents
+TICKET_UNIT_PRICES = {
+    9000: ("Pass 2 Jours", 9000),
+    7500: ("1 Jour Vendredi", 7500),  # default Friday for single-day
+}
+
+
+def _detect_tickets(amount_cents: int) -> list[tuple[str, int, int]]:
+    """
+    Given a total amount, figure out how many tickets and of what type.
+    Returns list of (ticket_type, unit_price, qty).
+    Tries exact multiples of known prices.
+    """
+    results = []
+    for unit_price, (ticket_type, _) in sorted(TICKET_UNIT_PRICES.items(), reverse=True):
+        if amount_cents > 0 and amount_cents % unit_price == 0:
+            qty = amount_cents // unit_price
+            results.append((ticket_type, unit_price, qty))
+            break
+    if not results and amount_cents > 0:
+        # Fallback: treat as single Pass 2 Jours
+        results.append(("Pass 2 Jours", amount_cents, 1))
+    elif amount_cents == 0:
+        results.append(("Pass 2 Jours", 0, 1))
+    return results
+
+
+@router.get("/fix-transactions", response_class=HTMLResponse)
+async def fix_transactions_page(
+    request: Request,
+    admin: models.User = Depends(require_admin),
+    db: Session = Depends(get_db),
+    done: str = Query(default=""),
+    fixed: int = Query(default=0),
+    pending: int = Query(default=0),
+):
+    """Preview what the fix will do."""
+
+    if done:
+        html = f"""<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Fix transactions</title>
+        <link rel="stylesheet" href="/static/css/style.css?v=2"/>
+        </head><body>
+        <nav class="navbar"><a href="/admin/dashboard" class="nav-brand">&larr; Admin</a></nav>
+        <main class="container" style="max-width:600px; text-align:center; padding-top:40px;">
+        <h1 style="color:var(--success);">&#x2714; Corrections appliqu&eacute;es</h1>
+        <p>{fixed} transaction(s) corrig&eacute;e(s)</p>
+        <p>{pending} billet(s) en attente cr&eacute;&eacute;(s)</p>
+        <a href="/admin/accounts" class="btn-primary" style="display:inline-block; margin-top:20px; padding:12px 28px;">Voir les comptes</a>
+        </main></body></html>"""
+        return HTMLResponse(html)
+
+    ticket_txs = (
+        db.query(models.Transaction)
+        .filter(models.Transaction.type == "ticket")
+        .order_by(models.Transaction.created_at)
+        .all()
+    )
+
+    fixes = []
+    for tx in ticket_txs:
+        user = db.query(models.User).filter(models.User.id == tx.user_id).first()
+        detected = _detect_tickets(tx.amount_cents)
+        if not detected:
+            continue
+        ticket_type, unit_price, qty = detected[0]
+
+        # Check if description already looks correct
+        current_desc = tx.description or ""
+        expected_desc = f"{ticket_type} x{qty}" if qty > 1 else ticket_type
+        needs_desc_fix = current_desc != expected_desc
+
+        # Check if pending tickets are missing for qty > 1
+        existing_pending = (
+            db.query(models.PendingTicket)
+            .filter(models.PendingTicket.buyer_id == tx.user_id)
+            .count()
+        )
+        needs_pending = qty > 1 and existing_pending < (qty - 1)
+        pending_to_create = (qty - 1) - existing_pending if needs_pending else 0
+
+        if needs_desc_fix or needs_pending:
+            fixes.append({
+                "tx_id": tx.id,
+                "user_name": user.name if user else "?",
+                "user_email": user.email if user else "?",
+                "current_desc": current_desc,
+                "new_desc": expected_desc,
+                "amount_cents": tx.amount_cents,
+                "qty": qty,
+                "unit_price": unit_price,
+                "needs_desc_fix": needs_desc_fix,
+                "pending_to_create": pending_to_create,
+                "ticket_type": ticket_type,
+            })
+
+    html = """<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Fix transactions</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=2"/>
+    <style>
+      table { width:100%; border-collapse:collapse; font-size:0.88rem; }
+      th, td { padding:8px 10px; border-bottom:1px solid var(--border); text-align:left; }
+      th { background:var(--cream); font-weight:600; font-size:0.78rem; text-transform:uppercase; }
+      .fix { color:var(--orange); font-weight:600; }
+      .ok { color:var(--success); }
+    </style>
+    </head><body>
+    <nav class="navbar"><a href="/admin/dashboard" class="nav-brand">&larr; Admin</a>
+    <span class="nav-brand">Fix transactions</span></nav>
+    <main class="container" style="max-width:900px;">
+    <h1>Corrections &agrave; appliquer</h1>"""
+
+    if not fixes:
+        html += '<p style="color:var(--success); font-weight:600; margin:24px 0;">Aucune correction n&eacute;cessaire.</p>'
+    else:
+        html += f'<p style="margin:12px 0;">{len(fixes)} transaction(s) &agrave; corriger.</p>'
+        html += '<table><thead><tr><th>Utilisateur</th><th>Actuel</th><th>Corrig&eacute;</th><th>Montant</th><th>Qty</th><th>Pending &agrave; cr&eacute;er</th></tr></thead><tbody>'
+        for f in fixes:
+            html += f'<tr>'
+            html += f'<td><strong>{f["user_name"]}</strong><br><span style="color:var(--text-muted); font-size:0.8rem;">{f["user_email"]}</span></td>'
+            html += f'<td class="fix">{f["current_desc"]}</td>'
+            html += f'<td class="ok">{f["new_desc"]}</td>'
+            html += f'<td>{f["amount_cents"]/100:.0f}&euro;</td>'
+            html += f'<td>{f["qty"]}</td>'
+            html += f'<td>{"+" + str(f["pending_to_create"]) + " billet(s)" if f["pending_to_create"] > 0 else "—"}</td>'
+            html += f'</tr>'
+        html += '</tbody></table>'
+        html += '''<form method="post" action="/admin/fix-transactions" style="margin-top:20px;">
+        <button type="submit" class="btn-primary" style="padding:12px 28px;">Appliquer les corrections</button>
+        </form>'''
+
+    html += '</main></body></html>'
+    return HTMLResponse(html)
+
+
+@router.post("/fix-transactions")
+async def apply_fix_transactions(
+    admin: models.User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Apply retroactive fixes to ticket transactions."""
+    from app.auth import hash_password
+    from app.email_utils import send_welcome_email
+    import secrets
+
+    ticket_txs = (
+        db.query(models.Transaction)
+        .filter(models.Transaction.type == "ticket")
+        .order_by(models.Transaction.created_at)
+        .all()
+    )
+
+    fixed_count = 0
+    pending_created = 0
+
+    for tx in ticket_txs:
+        detected = _detect_tickets(tx.amount_cents)
+        if not detected:
+            continue
+        ticket_type, unit_price, qty = detected[0]
+        expected_desc = f"{ticket_type} x{qty}" if qty > 1 else ticket_type
+
+        # Fix description
+        if tx.description != expected_desc:
+            tx.description = expected_desc
+            fixed_count += 1
+
+        # Create missing pending tickets
+        if qty > 1:
+            existing_pending = (
+                db.query(models.PendingTicket)
+                .filter(models.PendingTicket.buyer_id == tx.user_id)
+                .count()
+            )
+            to_create = (qty - 1) - existing_pending
+            for _ in range(max(0, to_create)):
+                pending = models.PendingTicket(
+                    buyer_id=tx.user_id,
+                    ticket_type=ticket_type,
+                    amount_cents=unit_price,
+                )
+                db.add(pending)
+                pending_created += 1
+
+    db.commit()
+    return RedirectResponse(
+        f"/admin/fix-transactions?done=1&fixed={fixed_count}&pending={pending_created}",
+        status_code=302,
+    )
+
+
 # ── Analytics ────────────────────────────────────────────────────────────────
 
 @router.get("/analytics", response_class=HTMLResponse)
