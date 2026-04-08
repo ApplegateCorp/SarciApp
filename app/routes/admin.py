@@ -206,6 +206,26 @@ async def grant_ticket(
     return RedirectResponse(f"/admin/accounts/{user_id}", status_code=302)
 
 
+@router.post("/transactions/{tx_id}/edit")
+async def edit_transaction(
+    tx_id: int,
+    description: str = Form(...),
+    amount: float = Form(...),
+    paid: str = Form("oui"),
+    admin: models.User = Depends(require_admin_or_sub),
+    db: Session = Depends(get_db),
+):
+    """Edit a ticket transaction (amount, type, paid status)."""
+    tx = db.query(models.Transaction).filter(models.Transaction.id == tx_id).first()
+    if not tx:
+        raise HTTPException(status_code=404)
+    tx.description = description
+    tx.amount_cents = int(amount * 100)
+    tx.paid = paid == "oui"
+    db.commit()
+    return RedirectResponse(f"/admin/accounts/{tx.user_id}", status_code=302)
+
+
 @router.post("/accounts/{user_id}/validate-ticket")
 async def validate_ticket_from_list(
     user_id: int,
