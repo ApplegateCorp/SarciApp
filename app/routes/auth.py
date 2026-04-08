@@ -41,22 +41,18 @@ async def register(
     email = email.lower().strip()
     existing = db.query(models.User).filter(models.User.email == email).first()
     if existing:
-        # Allow claiming a pre-created account (admin-added role OR HelloAsso stub)
-        # by setting name and password on first registration.
-        is_precreated = existing.is_bartender or existing.is_scanner or existing.is_sub_admin
         is_helloasso_stub = existing.ticket_purchased and not existing.is_admin
-        if is_precreated or is_helloasso_stub:
-            existing.name = name.strip()
-            existing.password_hash = hash_password(password)
-            db.commit()
-            db.refresh(existing)
-            response = RedirectResponse("/ticket", status_code=302)
-            token = create_access_token(existing.id)
-            response.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=60 * 60 * 24 * 7)
-            return response
+        is_precreated = existing.is_bartender or existing.is_scanner or existing.is_sub_admin
+        if is_helloasso_stub or is_precreated:
+            error_msg = (
+                "Un compte a déjà été créé avec cet email suite à votre achat. "
+                "Cliquez sur « Mot de passe oublié » pour définir votre mot de passe et accéder à votre billet."
+            )
+        else:
+            error_msg = "Un compte existe déjà avec cet email. Connectez-vous ou réinitialisez votre mot de passe."
         return templates.TemplateResponse(
             "register.html",
-            {"request": request, "error": "Un compte existe d\u00e9j\u00e0 avec cet email. Connectez-vous ou r\u00e9initialisez votre mot de passe.", "user": None},
+            {"request": request, "error": error_msg, "user": None},
             status_code=400,
         )
     user = models.User(name=name.strip(), email=email, password_hash=hash_password(password))
