@@ -35,7 +35,9 @@
     {% for tx in transactions %}
     <div class="tx-row {% if tx.amount_cents > 0 %}tx-credit{% else %}tx-debit{% endif %}">
       <div>
-        <span class="tx-desc">{{ tx.description }}</span>
+        <span class="tx-desc">
+          {% if tx.type == "ticket" %}🎟 {{ tx.description }}{% else %}{{ tx.description }}{% endif %}
+        </span>
         <span class="tx-date">{{ (tx.created_at|paris).strftime('%d/%m %H:%M') }}</span>
       </div>
       <span class="tx-amount">

@@ -72,6 +72,8 @@
   {% if all_transactions %}
   <div class="transactions">
     {% for tx in all_transactions %}
+    {% set qty = tx.description.split(' x')[1]|int if ' x' in tx.description else 1 %}
+    {% set base_desc = tx.description.split(' x')[0] if ' x' in tx.description else tx.description %}
     <div class="tx-row {% if tx.amount_cents > 0 %}tx-credit{% else %}tx-debit{% endif %}">
       <div>
         <span class="tx-desc">
@@ -79,12 +81,19 @@
           {% elif tx.type == 'topup' %}💳
           {% elif tx.type == 'drink' %}🍺
           {% endif %}
-          {{ tx.description }}
+          {{ base_desc }}
+          {% if tx.type == 'ticket' and qty > 1 %}
+            <span style="color:var(--text-muted); font-size:0.82rem;">&mdash; x{{ qty }}</span>
+          {% endif %}
         </span>
         <span class="tx-date">{{ (tx.created_at|paris).strftime('%d/%m/%Y %H:%M') }}</span>
       </div>
       <span class="tx-amount">
-        {% if tx.amount_cents > 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} &euro;
+        {% if tx.type == 'ticket' %}
+          —
+        {% else %}
+          {% if tx.amount_cents > 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} &euro;
+        {% endif %}
       </span>
     </div>
     {% endfor %}

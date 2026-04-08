@@ -98,7 +98,7 @@ async def helloasso_webhook(request: Request, db: Session = Depends(get_db)):
 
     db.flush()
 
-    # ── Process each ticket item ────────────────────────────────────────
+    # ── Process ticket items ────────────────────────────────────────────
     if not items:
         # Fallback: no items parsed, record as single ticket
         data = payload.get("data", payload)
@@ -112,32 +112,36 @@ async def helloasso_webhook(request: Request, db: Session = Depends(get_db)):
         )
         db.add(tx)
     else:
-        # First item → buyer's own ticket
-        first = items[0]
-        ticket_type = _normalize_ticket_type(first["name"])
-        tx = models.Transaction(
-            user_id=user.id,
-            amount_cents=first["amount"],
-            type="ticket",
-            description=ticket_type,
-        )
-        db.add(tx)
+        # Group items by normalized ticket type
+        grouped: dict[str, dict] = {}
+        for item in items:
+            ticket_type = _normalize_ticket_type(item["name"])
+            if ticket_type not in grouped:
+                grouped[ticket_type] = {"qty": 0, "total_cents": 0}
+            grouped[ticket_type]["qty"] += 1
+            grouped[ticket_type]["total_cents"] += item["amount"]
 
-        # Additional items → pending tickets to assign
-        for item in items[1:]:
-            item_type = _normalize_ticket_type(item["name"])
-            # Record the transaction on the buyer for accounting
-            extra_tx = models.Transaction(
+        # One transaction per ticket type with quantity
+        for ticket_type, info in grouped.items():
+            qty = info["qty"]
+            desc = f"{ticket_type} x{qty}" if qty > 1 else ticket_type
+            tx = models.Transaction(
                 user_id=user.id,
-                amount_cents=item["amount"],
+                amount_cents=info["total_cents"],
                 type="ticket",
-                description=item_type,
+                description=desc,
             )
-            db.add(extra_tx)
-            # Create pending ticket for assignment
+            db.add(tx)
+
+        # Create pending tickets for extras (all items beyond the first)
+        first_done = False
+        for item in items:
+            if not first_done:
+                first_done = True
+                continue
             pending = models.PendingTicket(
                 buyer_id=user.id,
-                ticket_type=item_type,
+                ticket_type=_normalize_ticket_type(item["name"]),
                 amount_cents=item["amount"],
             )
             db.add(pending)

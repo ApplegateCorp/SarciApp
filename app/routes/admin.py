@@ -211,15 +211,16 @@ async def edit_transaction(
     tx_id: int,
     description: str = Form(...),
     amount: float = Form(...),
+    qty: int = Form(1),
     paid: str = Form("oui"),
     admin: models.User = Depends(require_admin_or_sub),
     db: Session = Depends(get_db),
 ):
-    """Edit a ticket transaction (amount, type, paid status)."""
+    """Edit a ticket transaction (type, qty, amount, paid status)."""
     tx = db.query(models.Transaction).filter(models.Transaction.id == tx_id).first()
     if not tx:
         raise HTTPException(status_code=404)
-    tx.description = description
+    tx.description = f"{description} x{qty}" if qty > 1 else description
     tx.amount_cents = int(amount * 100)
     tx.paid = paid == "oui"
     db.commit()
@@ -647,24 +648,44 @@ async def analytics_data(
     )
     tickets_by_day: dict[str, int] = {}
     for tx in ticket_txs:
+        # Parse qty from description like "Pass 2 Jours x2"
+        desc = tx.description or ""
+        if " x" in desc:
+            try:
+                qty = int(desc.split(" x")[-1])
+            except ValueError:
+                qty = 1
+        else:
+            qty = 1
         day_key = to_paris(tx.created_at).strftime("%Y-%m-%d")
-        tickets_by_day[day_key] = tickets_by_day.get(day_key, 0) + 1
+        tickets_by_day[day_key] = tickets_by_day.get(day_key, 0) + qty
 
     # Ticket type breakdown — normalize to Vendredi / Samedi / 2 Jours
     # Only count paid tickets in revenue
     ticket_types: dict[str, dict] = {}
     gifted_count = 0
     for tx in ticket_txs:
-        category = _normalize_ticket_type(tx.description or "")
+        desc = tx.description or ""
+        # Parse qty from "Pass 2 Jours x2"
+        if " x" in desc:
+            base_desc = desc.rsplit(" x", 1)[0]
+            try:
+                qty = int(desc.rsplit(" x", 1)[1])
+            except ValueError:
+                qty = 1
+        else:
+            base_desc = desc
+            qty = 1
+        category = _normalize_ticket_type(base_desc)
         if category not in ticket_types:
             ticket_types[category] = {"count": 0, "paid_count": 0, "revenue_cents": 0, "gifted_count": 0}
-        ticket_types[category]["count"] += 1
+        ticket_types[category]["count"] += qty
         if tx.paid:
-            ticket_types[category]["paid_count"] += 1
+            ticket_types[category]["paid_count"] += qty
             ticket_types[category]["revenue_cents"] += tx.amount_cents
         else:
-            ticket_types[category]["gifted_count"] += 1
-            gifted_count += 1
+            ticket_types[category]["gifted_count"] += qty
+            gifted_count += qty
 
     # Topup by hour (Paris time)
     topup_txs = (

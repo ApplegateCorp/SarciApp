@@ -166,6 +166,8 @@
         <span></span>
       </div>
       {% for tx in transactions %}
+      {% set qty = tx.description.split(' x')[1]|int if ' x' in tx.description else 1 %}
+      {% set base_desc = tx.description.split(' x')[0] if ' x' in tx.description else tx.description %}
       <div class="tx-row-detail" id="tx-row-{{ tx.id }}">
         <span>
           {% if tx.type == 'ticket' %}<span class="tx-type tx-type-ticket">Billet</span>
@@ -174,7 +176,12 @@
           {% elif tx.type == 'drink' %}<span class="tx-type tx-type-drink">Bar</span>
           {% else %}<span class="tx-type">{{ tx.type }}</span>{% endif %}
         </span>
-        <span class="tx-desc">{{ tx.description }}</span>
+        <span class="tx-desc">
+          {{ base_desc }}
+          {% if tx.type == 'ticket' and qty > 1 %}
+            <span style="color:var(--text-muted); font-size:0.82rem;">&mdash; Qty : {{ qty }} &times; {{ "%.0f"|format(tx.amount_cents / qty / 100) }}&euro;</span>
+          {% endif %}
+        </span>
         <span class="{% if tx.amount_cents >= 0 %}tx-amount-pos{% else %}tx-amount-neg{% endif %}">
           {% if tx.amount_cents >= 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} &euro;
         </span>
@@ -193,13 +200,18 @@
           <label style="font-size:0.8rem; flex:1; min-width:120px;">
             Type de billet
             <select name="description" style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;">
-              <option value="Pass 2 Jours" {% if tx.description == 'Pass 2 Jours' %}selected{% endif %}>Pass 2 Jours</option>
-              <option value="1 Jour Vendredi" {% if tx.description == '1 Jour Vendredi' %}selected{% endif %}>1 Jour Vendredi</option>
-              <option value="1 Jour Samedi" {% if tx.description == '1 Jour Samedi' %}selected{% endif %}>1 Jour Samedi</option>
+              <option value="Pass 2 Jours" {% if base_desc == 'Pass 2 Jours' %}selected{% endif %}>Pass 2 Jours</option>
+              <option value="1 Jour Vendredi" {% if base_desc == '1 Jour Vendredi' %}selected{% endif %}>1 Jour Vendredi</option>
+              <option value="1 Jour Samedi" {% if base_desc == '1 Jour Samedi' %}selected{% endif %}>1 Jour Samedi</option>
             </select>
           </label>
+          <label style="font-size:0.8rem; width:50px;">
+            Qty
+            <input type="number" name="qty" value="{{ qty }}" min="1" max="10"
+                   style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;" />
+          </label>
           <label style="font-size:0.8rem; width:90px;">
-            Montant (&euro;)
+            Total (&euro;)
             <input type="number" name="amount" value="{{ "%.2f"|format(tx.amount_cents / 100) }}" step="0.01" min="0"
                    style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;" />
           </label>
