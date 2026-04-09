@@ -1,5 +1,5 @@
 import stripe
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -12,7 +12,7 @@ router = APIRouter()
 templates = create_templates()
 stripe.api_key = STRIPE_SECRET_KEY
 
-TOPUP_AMOUNTS = [5, 10, 20, 30, 50]
+TOPUP_AMOUNTS = [5, 10, 20, 50]
 
 
 @router.get("/wallet", response_class=HTMLResponse)
@@ -35,36 +35,33 @@ async def wallet_page(
         "transactions": transactions,
         "topup_amounts": TOPUP_AMOUNTS,
         "stripe_pk": STRIPE_PUBLISHABLE_KEY,
-        "paid": request.query_params.get("session_id") is not None,
     })
 
 
-@router.post("/wallet/topup/session", response_class=JSONResponse)
-async def create_topup_session(
-    amount: int = Form(...),
+@router.post("/wallet/topup/intent", response_class=JSONResponse)
+async def create_topup_intent(
+    request: Request,
     user: models.User = Depends(get_current_user),
 ):
-    """Create an embedded Checkout session for wallet top-up."""
-    if amount not in TOPUP_AMOUNTS:
-        return JSONResponse({"error": "Invalid amount."}, status_code=400)
+    """Create a PaymentIntent for wallet top-up (Apple Pay / Google Pay)."""
+    body = await request.json()
+    amount = body.get("amount")
 
-    session = stripe.checkout.Session.create(
-        ui_mode="embedded",
-        payment_method_types=["card"],
-        line_items=[{
-            "price_data": {
-                "currency": "eur",
-                "product_data": {"name": f"Rechargement compte bar — {amount}€"},
-                "unit_amount": amount * 100,
-            },
-            "quantity": 1,
-        }],
-        mode="payment",
-        return_url=f"{BASE_URL}/wallet?session_id={{CHECKOUT_SESSION_ID}}",
-        customer_email=user.email,
-        metadata={"type": "topup", "user_id": str(user.id), "amount_cents": str(amount * 100)},
+    if not amount or amount not in TOPUP_AMOUNTS:
+        return JSONResponse({"error": "Montant invalide."}, status_code=400)
+
+    intent = stripe.PaymentIntent.create(
+        amount=amount * 100,
+        currency="eur",
+        metadata={
+            "type": "topup",
+            "user_id": str(user.id),
+            "amount_cents": str(amount * 100),
+        },
+        automatic_payment_methods={"enabled": True},
     )
-    return JSONResponse({"clientSecret": session.client_secret})
+
+    return JSONResponse({"clientSecret": intent.client_secret})
 
 
 @router.get("/history", response_class=HTMLResponse)
@@ -74,23 +71,18 @@ async def history_page(
     db: Session = Depends(get_db),
 ):
     """Full order history for a user — grouped by drink orders."""
-    # Get all drink transactions
     drink_txs = (
         db.query(models.Transaction)
         .filter(models.Transaction.user_id == user.id, models.Transaction.type == "drink")
         .order_by(models.Transaction.created_at.desc())
         .all()
     )
-
-    # Get all transactions for summary
     all_txs = (
         db.query(models.Transaction)
         .filter(models.Transaction.user_id == user.id)
         .order_by(models.Transaction.created_at.desc())
         .all()
     )
-
-    # Calculate totals
     total_spent_bar = sum(abs(tx.amount_cents) for tx in drink_txs)
     total_orders = len(drink_txs)
     total_recharged = sum(tx.amount_cents for tx in all_txs if tx.type == "topup")

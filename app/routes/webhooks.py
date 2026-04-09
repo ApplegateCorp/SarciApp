@@ -20,7 +20,47 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    if event["type"] == "checkout.session.completed":
+    # ── PaymentIntent succeeded (Apple Pay / Google Pay / Card) ──
+    if event["type"] == "payment_intent.succeeded":
+        intent = event["data"]["object"]
+        metadata = intent.get("metadata", {})
+        payment_type = metadata.get("type")
+        user_id = metadata.get("user_id")
+
+        if not user_id:
+            return JSONResponse({"ok": True})
+
+        user = db.query(models.User).filter(models.User.id == int(user_id)).first()
+        if not user:
+            return JSONResponse({"ok": True})
+
+        if payment_type == "topup":
+            amount_cents = int(metadata.get("amount_cents", 0))
+            pi_id = intent.get("id", "")
+
+            # Idempotency: check if we already processed this PaymentIntent
+            existing = (
+                db.query(models.Transaction)
+                .filter(models.Transaction.stripe_session_id == pi_id)
+                .first()
+            )
+            if existing:
+                return JSONResponse({"ok": True})
+
+            if amount_cents > 0:
+                user.balance_cents += amount_cents
+                transaction = models.Transaction(
+                    user_id=user.id,
+                    amount_cents=amount_cents,
+                    type="topup",
+                    description=f"Top-up {amount_cents // 100}\u20ac",
+                    stripe_session_id=pi_id,
+                )
+                db.add(transaction)
+                db.commit()
+
+    # ── Legacy: Checkout Session completed (keep for backward compat) ──
+    elif event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         metadata = session.get("metadata", {})
         payment_type = metadata.get("type")
@@ -35,14 +75,24 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
 
         if payment_type == "topup":
             amount_cents = int(metadata.get("amount_cents", 0))
+            session_id = session.get("id", "")
+
+            existing = (
+                db.query(models.Transaction)
+                .filter(models.Transaction.stripe_session_id == session_id)
+                .first()
+            )
+            if existing:
+                return JSONResponse({"ok": True})
+
             if amount_cents > 0:
                 user.balance_cents += amount_cents
                 transaction = models.Transaction(
                     user_id=user.id,
                     amount_cents=amount_cents,
                     type="topup",
-                    description=f"Top-up {amount_cents // 100}€",
-                    stripe_session_id=session["id"],
+                    description=f"Top-up {amount_cents // 100}\u20ac",
+                    stripe_session_id=session_id,
                 )
                 db.add(transaction)
                 db.commit()

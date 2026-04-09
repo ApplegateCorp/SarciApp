@@ -3,33 +3,213 @@
 {% block title %}Mon compte bar — Repeat the Monkey #3{% endblock %}
 
 {% block head %}
-<script src="https://js.stripe.com/v3/"></script>
+<style>
+  .balance-card {
+    background: var(--brown);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .balance-label {
+    display: block;
+    color: rgba(245,239,224,0.6);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .balance-big {
+    display: block;
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--yellow);
+    margin-top: 4px;
+  }
+
+  /* ── Amount selector ── */
+  .topup-section { margin-bottom: 32px; }
+  .topup-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .amount-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .amount-btn {
+    padding: 16px 8px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .amount-btn:active { transform: scale(0.96); }
+  .amount-btn.selected {
+    border-color: var(--orange);
+    background: var(--orange);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(244,99,42,0.3);
+  }
+
+  /* ── Pay button area ── */
+  .pay-area {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  .pay-area.visible { display: flex; }
+
+  #payment-request-button {
+    width: 100%;
+    max-width: 400px;
+    height: 48px;
+  }
+
+  .pay-divider {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    text-align: center;
+    margin: 4px 0;
+  }
+
+  /* ── Card fallback ── */
+  .card-fallback {
+    width: 100%;
+    max-width: 400px;
+  }
+  #card-element {
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-size: 0.95rem;
+  }
+  #card-errors {
+    color: var(--error);
+    font-size: 0.82rem;
+    margin-top: 6px;
+    min-height: 20px;
+  }
+  .btn-pay-card {
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px;
+    border-radius: 50px;
+    border: none;
+    background: var(--charcoal);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-family: 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-pay-card:hover { opacity: 0.88; }
+  .btn-pay-card:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Status overlays ── */
+  .topup-status {
+    text-align: center;
+    padding: 20px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    display: none;
+  }
+  .topup-status.visible { display: block; }
+  .topup-success { background: #edf5f0; border: 1.5px solid var(--success); color: var(--success); }
+  .topup-error { background: #fdf0ee; border: 1.5px solid var(--error); color: var(--error); }
+  .topup-status h3 { margin: 0 0 4px; font-size: 1.1rem; }
+  .topup-status p { margin: 0; font-size: 0.88rem; }
+
+  /* ── Processing spinner ── */
+  .processing-overlay {
+    display: none;
+    text-align: center;
+    padding: 24px;
+  }
+  .processing-overlay.visible { display: block; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="wallet-page">
-  <h1>Mon compte bar</h1>
 
-  {% if paid %}
-  <div class="alert alert-success">Rechargement confirmé. Votre solde sera mis à jour dans quelques instants.</div>
-  {% endif %}
-
-  <!-- ── Balance card ──────────────────────────────────────────────────── -->
+  <!-- Balance card -->
   <div class="balance-card">
     <span class="balance-label">Solde actuel</span>
-    <span class="balance-big">{{ "%.2f"|format(balance) }} EUR</span>
+    <span class="balance-big">{{ "%.2f"|format(balance) }} &euro;</span>
   </div>
 
-  <!-- ── Top-up form (coming soon) ─────────────────────────────────────── -->
-  <div class="topup-section">
-    <div class="card-form" style="text-align: center; padding: 32px 24px;">
-      <h2>Recharger mon compte</h2>
-      <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 12px;">Coming soon !</p>
-      <p style="color: var(--text-muted); font-size: 0.88rem;">Le rechargement du compte bar sera disponible très bientôt.</p>
+  <!-- Status messages -->
+  <div id="topup-success" class="topup-status topup-success">
+    <h3>Rechargement confirm&eacute; !</h3>
+    <p id="success-msg"></p>
+  </div>
+  <div id="topup-error" class="topup-status topup-error">
+    <h3>Erreur</h3>
+    <p id="error-msg"></p>
+  </div>
+
+  <!-- Top-up section -->
+  <div class="topup-section" id="topup-section">
+    <div class="topup-title">Recharger mon compte</div>
+
+    <div class="amount-grid" id="amount-grid">
+      {% for amt in topup_amounts %}
+      <button class="amount-btn" data-amount="{{ amt }}" onclick="selectAmount(this, {{ amt }})">
+        {{ amt }}&euro;
+      </button>
+      {% endfor %}
+    </div>
+
+    <!-- Processing spinner -->
+    <div id="processing" class="processing-overlay">
+      <div class="spinner"></div>
+      <p style="color:var(--text-muted); font-size:0.88rem;">Paiement en cours...</p>
+    </div>
+
+    <!-- Payment buttons (hidden until amount selected) -->
+    <div id="pay-area" class="pay-area">
+      <!-- Apple Pay / Google Pay button (injected by Stripe) -->
+      <div id="payment-request-button"></div>
+
+      <!-- Divider + card fallback (shown if no wallet available) -->
+      <div id="card-fallback-section" class="card-fallback" style="display:none;">
+        <div class="pay-divider">ou payer par carte</div>
+        <div id="card-element"></div>
+        <div id="card-errors"></div>
+        <button id="btn-pay-card" class="btn-pay-card" onclick="payWithCard()" disabled>
+          Payer <span id="card-btn-amount"></span>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- ── Transaction history ──────────────────────────────────────────── -->
+  <!-- Transaction history -->
   {% if transactions %}
   <div class="transactions">
     <h2>Historique</h2>
@@ -37,15 +217,15 @@
     <div class="tx-row {% if tx.amount_cents > 0 %}tx-credit{% else %}tx-debit{% endif %}">
       <div>
         <span class="tx-desc">
-          {% if tx.type == "ticket" %}🎟 {{ tx.description }}{% else %}{{ tx.description }}{% endif %}
+          {% if tx.type == "ticket" %}&#x1F3AB; {{ tx.description }}{% else %}{{ tx.description }}{% endif %}
         </span>
         <span class="tx-date">{{ (tx.created_at|paris).strftime('%d/%m %H:%M') }}</span>
       </div>
       <span class="tx-amount">
         {% if tx.type == "ticket" %}
-          —
+          &mdash;
         {% else %}
-          {% if tx.amount_cents > 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} EUR
+          {% if tx.amount_cents > 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} &euro;
         {% endif %}
       </span>
     </div>
@@ -53,45 +233,213 @@
   </div>
   {% endif %}
 </div>
+{% endblock %}
 
+{% block scripts %}
+<script src="https://js.stripe.com/v3/"></script>
 <script>
-  let checkoutInstance = null;
+  const stripe = Stripe('{{ stripe_pk }}');
+  const elements = stripe.elements();
 
-  async function startTopup() {
-    const selected = document.querySelector('input[name="amount"]:checked');
-    if (!selected) return;
+  let selectedAmount = null;
+  let clientSecret = null;
+  let paymentRequest = null;
+  let prButton = null;
+  let cardElement = null;
+  let walletAvailable = false;
 
-    document.getElementById('amount-step').classList.add('hidden');
-    document.getElementById('checkout-wrapper').classList.remove('hidden');
+  // ── Amount selection ─────────────────────────────────
+  async function selectAmount(btn, amount) {
+    // Update UI
+    document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedAmount = amount;
 
-    const stripe = Stripe('{{ stripe_pk }}');
+    // Reset state
+    hide('topup-success');
+    hide('topup-error');
+    hide('processing');
+    document.getElementById('pay-area').classList.add('visible');
+    document.getElementById('card-btn-amount').textContent = amount + '\u20ac';
 
-    const formData = new FormData();
-    formData.append('amount', selected.value);
-    const res = await fetch('/wallet/topup/session', { method: 'POST', body: formData });
-
-    if (!res.ok) {
-      document.getElementById('checkout-loading').innerHTML =
-        '<p class="alert alert-error">Impossible de charger le paiement. Rechargez la page.</p>';
+    // Create PaymentIntent
+    try {
+      const res = await fetch('/wallet/topup/intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showError(data.error);
+        return;
+      }
+      clientSecret = data.clientSecret;
+    } catch (e) {
+      showError('Erreur de connexion. R\u00e9essayez.');
       return;
     }
 
-    const { clientSecret } = await res.json();
-    document.getElementById('checkout-loading').style.display = 'none';
-
-    checkoutInstance = await stripe.initEmbeddedCheckout({ clientSecret });
-    checkoutInstance.mount('#checkout');
-  }
-
-  function cancelTopup() {
-    if (checkoutInstance) {
-      checkoutInstance.destroy();
-      checkoutInstance = null;
+    // Update Payment Request if it exists
+    if (paymentRequest) {
+      paymentRequest.update({
+        total: { label: 'Rechargement compte bar', amount: amount * 100 },
+      });
     }
-    document.getElementById('checkout').innerHTML = '';
-    document.getElementById('checkout-loading').style.display = '';
-    document.getElementById('checkout-wrapper').classList.add('hidden');
-    document.getElementById('amount-step').classList.remove('hidden');
+
+    // Enable card button
+    if (cardElement) {
+      document.getElementById('btn-pay-card').disabled = false;
+    }
   }
+
+  // ── Payment Request API (Apple Pay / Google Pay) ─────
+  function initPaymentRequest() {
+    paymentRequest = stripe.paymentRequest({
+      country: 'FR',
+      currency: 'eur',
+      total: { label: 'Rechargement compte bar', amount: 500 },
+      requestPayerName: false,
+      requestPayerEmail: false,
+    });
+
+    prButton = elements.create('paymentRequestButton', {
+      paymentRequest,
+      style: {
+        paymentRequestButton: {
+          type: 'default',
+          theme: 'dark',
+          height: '48px',
+        },
+      },
+    });
+
+    paymentRequest.canMakePayment().then(result => {
+      if (result) {
+        walletAvailable = true;
+        prButton.mount('#payment-request-button');
+      } else {
+        // No Apple Pay / Google Pay — show card as primary
+        document.getElementById('payment-request-button').style.display = 'none';
+      }
+      // Always show card fallback
+      initCardElement();
+    });
+
+    paymentRequest.on('paymentmethod', async (ev) => {
+      if (!clientSecret) {
+        ev.complete('fail');
+        return;
+      }
+
+      show('processing');
+
+      const { paymentIntent, error } = await stripe.confirmCardPayment(
+        clientSecret,
+        { payment_method: ev.paymentMethod.id },
+        { handleActions: false }
+      );
+
+      if (error) {
+        ev.complete('fail');
+        hide('processing');
+        showError(error.message);
+      } else if (paymentIntent.status === 'requires_action') {
+        ev.complete('success');
+        const { error: actionError } = await stripe.confirmCardPayment(clientSecret);
+        hide('processing');
+        if (actionError) {
+          showError(actionError.message);
+        } else {
+          onSuccess();
+        }
+      } else {
+        ev.complete('success');
+        hide('processing');
+        onSuccess();
+      }
+    });
+  }
+
+  // ── Card element fallback ────────────────────────────
+  function initCardElement() {
+    const section = document.getElementById('card-fallback-section');
+    if (walletAvailable) {
+      // Show divider + card as secondary
+      section.style.display = 'block';
+    } else {
+      // Card is primary — no divider needed
+      section.style.display = 'block';
+      section.querySelector('.pay-divider').style.display = 'none';
+    }
+
+    cardElement = elements.create('card', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#2C2C2C',
+          '::placeholder': { color: '#9ca3af' },
+        },
+      },
+      hidePostalCode: true,
+    });
+    cardElement.mount('#card-element');
+
+    cardElement.on('change', (event) => {
+      const errEl = document.getElementById('card-errors');
+      errEl.textContent = event.error ? event.error.message : '';
+    });
+  }
+
+  async function payWithCard() {
+    if (!clientSecret || !cardElement) return;
+
+    const btn = document.getElementById('btn-pay-card');
+    btn.disabled = true;
+    btn.textContent = 'Paiement en cours...';
+    show('processing');
+
+    const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: { card: cardElement },
+    });
+
+    hide('processing');
+
+    if (error) {
+      showError(error.message);
+      btn.disabled = false;
+      btn.textContent = 'Payer ' + selectedAmount + '\u20ac';
+    } else if (paymentIntent.status === 'succeeded') {
+      onSuccess();
+    }
+  }
+
+  // ── Success / Error handlers ─────────────────────────
+  function onSuccess() {
+    const msg = document.getElementById('success-msg');
+    msg.textContent = '+' + selectedAmount + '\u20ac ajout\u00e9s \u00e0 votre compte. Le solde sera mis \u00e0 jour dans quelques secondes.';
+    show('topup-success');
+    hide('topup-error');
+    document.getElementById('pay-area').classList.remove('visible');
+    document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+    clientSecret = null;
+    selectedAmount = null;
+
+    // Refresh page after 3 seconds to show updated balance
+    setTimeout(() => { window.location.reload(); }, 3000);
+  }
+
+  function showError(msg) {
+    document.getElementById('error-msg').textContent = msg;
+    show('topup-error');
+    hide('topup-success');
+    hide('processing');
+  }
+
+  function show(id) { document.getElementById(id).classList.add('visible'); }
+  function hide(id) { document.getElementById(id).classList.remove('visible'); }
+
+  // ── Init ─────────────────────────────────────────────
+  initPaymentRequest();
 </script>
 {% endblock %}
