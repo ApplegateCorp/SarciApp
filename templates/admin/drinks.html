@@ -1,179 +1,115 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Boissons — RTM Admin</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=2" />
-  <style>
-    .drink-card {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-    }
-    .drink-card.inactive { opacity: 0.5; }
-    .drink-info {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex: 1;
-    }
-    .drink-info .drink-emoji { font-size: 2rem; }
-    .drink-meta h3 { font-size: 1rem; margin: 0 0 2px; font-family: 'Roboto', sans-serif; }
-    .drink-meta .price { color: var(--orange); font-weight: 700; font-size: 0.95rem; }
-    .drink-meta .status { font-size: 0.78rem; color: var(--text-muted); }
-    .drink-actions {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .drink-actions button, .drink-actions .btn-sm {
-      padding: 6px 12px;
-      border-radius: 50px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1.5px solid var(--border);
-      background: var(--cream);
-      color: var(--text);
-      font-family: 'Roboto', sans-serif;
-    }
-    .drink-actions .btn-sm:hover { border-color: var(--primary); color: var(--primary); }
-    .btn-delete { color: var(--error) !important; border-color: var(--error) !important; background: #fdf0ee !important; }
-    .btn-delete:hover { background: var(--error) !important; color: #fff !important; }
+{% extends "admin/base_admin.html" %}
+{% set active_tab = "drinks" %}
+{% block title %}Boissons{% endblock %}
 
-    /* Edit modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(46,26,14,0.5);
-      z-index: 500;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-    }
-    .modal-backdrop.visible { opacity: 1; pointer-events: all; }
-    .modal {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 28px;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: 0 12px 48px rgba(46,26,14,0.25);
-    }
-    .modal h2 { margin-bottom: 16px; font-size: 1.2rem; }
-    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
-    .modal-actions button { flex: 1; }
-  </style>
-</head>
-<body>
-  <nav class="navbar">
-    <a href="/admin/dashboard" class="nav-brand">← Admin</a>
-    <span class="nav-brand">Menu</span>
-  </nav>
+{% block head %}
+<style>
+  .drink-card {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+    padding: 18px; margin-bottom: 12px; display: flex; align-items: center;
+    justify-content: space-between; gap: 14px;
+  }
+  .drink-card.inactive { opacity: 0.5; }
+  .drink-info { display: flex; align-items: center; gap: 14px; flex: 1; }
+  .drink-info .drink-emoji { font-size: 2rem; }
+  .drink-meta h3 { font-size: 1rem; margin: 0 0 2px; font-family: 'Roboto', sans-serif; }
+  .drink-meta .price { color: var(--orange); font-weight: 700; font-size: 0.95rem; }
+  .drink-meta .status { font-size: 0.78rem; color: var(--text-muted); }
+  .drink-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .drink-actions button, .drink-actions .btn-sm {
+    padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--border); background: var(--cream);
+    color: var(--text); font-family: 'Roboto', sans-serif;
+  }
+  .drink-actions .btn-sm:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-delete { color: var(--error) !important; border-color: var(--error) !important; background: #fdf0ee !important; }
+  .btn-delete:hover { background: var(--error) !important; color: #fff !important; }
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(46,26,14,0.5); z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-backdrop.visible { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border-radius: var(--radius); padding: 28px;
+    width: 90%; max-width: 400px; box-shadow: 0 12px 48px rgba(46,26,14,0.25);
+  }
+  .modal h2 { margin-bottom: 16px; font-size: 1.2rem; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .modal-actions button { flex: 1; }
+</style>
+{% endblock %}
 
-  <main class="container">
-    <div class="page-header">
-      <h1>G&eacute;rer le menu</h1>
-      <p>Ajoutez, modifiez ou d&eacute;sactivez les boissons disponibles au bar.</p>
-    </div>
+{% block content %}
+<div class="page-header">
+  <h1>G&eacute;rer le menu</h1>
+  <p>Ajoutez, modifiez ou d&eacute;sactivez les boissons disponibles au bar.</p>
+</div>
 
-    <!-- Add drink form -->
-    <div class="card-form">
-      <h2>Ajouter une boisson</h2>
-      <form method="post" action="/admin/drinks/add">
-        <label>Nom
-          <input type="text" name="name" required placeholder="Bi&egrave;re pression" />
-        </label>
-        <label>Prix (&euro;)
-          <input type="number" name="price" step="0.50" min="0.50" required placeholder="3.50" />
-        </label>
-        <label>Emoji
-          <input type="text" name="emoji" value="" maxlength="4" />
-        </label>
-        <button type="submit" class="btn-primary btn-full">Ajouter</button>
-      </form>
-    </div>
+<div class="card-form">
+  <h2>Ajouter une boisson</h2>
+  <form method="post" action="/admin/drinks/add">
+    <label>Nom <input type="text" name="name" required placeholder="Bi&egrave;re pression" /></label>
+    <label>Prix (&euro;) <input type="number" name="price" step="0.50" min="0.50" required placeholder="3.50" /></label>
+    <label>Emoji <input type="text" name="emoji" value="" maxlength="4" /></label>
+    <button type="submit" class="btn-primary btn-full">Ajouter</button>
+  </form>
+</div>
 
-    <div style="margin-top: 28px;">
-      <h2>Boissons actuelles</h2>
-
-      {% for drink in drinks %}
-      <div class="drink-card {% if not drink.available %}inactive{% endif %}">
-        <div class="drink-info">
-          <span class="drink-emoji">{{ drink.emoji }}</span>
-          <div class="drink-meta">
-            <h3>{{ drink.name }}</h3>
-            <span class="price">{{ "%.2f"|format(drink.price_cents / 100) }} &euro;</span>
-            {% if not drink.available %}
-            <span class="status">D&eacute;sactiv&eacute;</span>
-            {% endif %}
-          </div>
-        </div>
-        <div class="drink-actions">
-          <button class="btn-sm" onclick="openEdit({{ drink.id }}, '{{ drink.name }}', {{ drink.price_cents }}, '{{ drink.emoji }}')">Modifier</button>
-          <form method="post" action="/admin/drinks/{{ drink.id }}/toggle" style="display:inline;">
-            <button type="submit" class="btn-sm">
-              {% if drink.available %}D&eacute;sactiver{% else %}Activer{% endif %}
-            </button>
-          </form>
-          <form method="post" action="/admin/drinks/{{ drink.id }}/delete" style="display:inline;"
-                onsubmit="return confirm('Supprimer {{ drink.name }} ?');">
-            <button type="submit" class="btn-sm btn-delete">Suppr.</button>
-          </form>
-        </div>
+<div style="margin-top: 28px;">
+  <h2>Boissons actuelles</h2>
+  {% for drink in drinks %}
+  <div class="drink-card {% if not drink.available %}inactive{% endif %}">
+    <div class="drink-info">
+      <span class="drink-emoji">{{ drink.emoji }}</span>
+      <div class="drink-meta">
+        <h3>{{ drink.name }}</h3>
+        <span class="price">{{ "%.2f"|format(drink.price_cents / 100) }} &euro;</span>
+        {% if not drink.available %}<span class="status">D&eacute;sactiv&eacute;</span>{% endif %}
       </div>
-      {% else %}
-      <p style="color: #888; margin-top: 16px;">Aucune boisson ajout&eacute;e.</p>
-      {% endfor %}
     </div>
-  </main>
-
-  <!-- Edit modal -->
-  <div id="edit-modal" class="modal-backdrop">
-    <div class="modal">
-      <h2>Modifier la boisson</h2>
-      <form id="edit-form" method="post">
-        <label>Nom
-          <input type="text" name="name" id="edit-name" required />
-        </label>
-        <label>Prix (&euro;)
-          <input type="number" name="price" id="edit-price" step="0.50" min="0.50" required />
-        </label>
-        <label>Emoji
-          <input type="text" name="emoji" id="edit-emoji" maxlength="4" />
-        </label>
-        <div class="modal-actions">
-          <button type="button" class="btn-outline" onclick="closeEdit()">Annuler</button>
-          <button type="submit" class="btn-primary">Enregistrer</button>
-        </div>
+    <div class="drink-actions">
+      <button class="btn-sm" onclick="openEdit({{ drink.id }}, '{{ drink.name }}', {{ drink.price_cents }}, '{{ drink.emoji }}')">Modifier</button>
+      <form method="post" action="/admin/drinks/{{ drink.id }}/toggle" style="display:inline;">
+        <button type="submit" class="btn-sm">{% if drink.available %}D&eacute;sactiver{% else %}Activer{% endif %}</button>
+      </form>
+      <form method="post" action="/admin/drinks/{{ drink.id }}/delete" style="display:inline;" onsubmit="return confirm('Supprimer {{ drink.name }} ?');">
+        <button type="submit" class="btn-sm btn-delete">Suppr.</button>
       </form>
     </div>
   </div>
+  {% else %}
+  <p style="color: #888; margin-top: 16px;">Aucune boisson ajout&eacute;e.</p>
+  {% endfor %}
+</div>
 
-  <script>
-    function openEdit(id, name, priceCents, emoji) {
-      document.getElementById('edit-form').action = '/admin/drinks/' + id + '/edit';
-      document.getElementById('edit-name').value = name;
-      document.getElementById('edit-price').value = (priceCents / 100).toFixed(2);
-      document.getElementById('edit-emoji').value = emoji;
-      document.getElementById('edit-modal').classList.add('visible');
-    }
-    function closeEdit() {
-      document.getElementById('edit-modal').classList.remove('visible');
-    }
-    document.getElementById('edit-modal').addEventListener('click', function(e) {
-      if (e.target === this) closeEdit();
-    });
-  </script>
-</body>
-</html>
+<!-- Edit modal -->
+<div id="edit-modal" class="modal-backdrop">
+  <div class="modal">
+    <h2>Modifier la boisson</h2>
+    <form id="edit-form" method="post">
+      <label>Nom <input type="text" name="name" id="edit-name" required /></label>
+      <label>Prix (&euro;) <input type="number" name="price" id="edit-price" step="0.50" min="0.50" required /></label>
+      <label>Emoji <input type="text" name="emoji" id="edit-emoji" maxlength="4" /></label>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" onclick="closeEdit()">Annuler</button>
+        <button type="submit" class="btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openEdit(id, name, priceCents, emoji) {
+  document.getElementById('edit-form').action = '/admin/drinks/' + id + '/edit';
+  document.getElementById('edit-name').value = name;
+  document.getElementById('edit-price').value = (priceCents / 100).toFixed(2);
+  document.getElementById('edit-emoji').value = emoji;
+  document.getElementById('edit-modal').classList.add('visible');
+}
+function closeEdit() { document.getElementById('edit-modal').classList.remove('visible'); }
+document.getElementById('edit-modal').addEventListener('click', function(e) { if (e.target === this) closeEdit(); });
+</script>
+{% endblock %}

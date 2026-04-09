@@ -1,197 +1,179 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Comptes — RTM Admin</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=2" />
-  <style>
-    .filter-bar {
-      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
-    }
-    .filter-chip {
-      padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: 600;
-      border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
-      text-decoration: none; transition: all 0.15s; white-space: nowrap;
-    }
-    .filter-chip:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
-    .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .filter-chip .badge {
-      display: inline-block; background: rgba(0,0,0,0.12); padding: 1px 7px;
-      border-radius: 50px; font-size: 0.72rem; margin-left: 4px;
-    }
-    .filter-chip.active .badge { background: rgba(255,255,255,0.3); }
+{% extends "admin/base_admin.html" %}
+{% set active_tab = "accounts" %}
+{% block title %}Comptes{% endblock %}
 
-    .search-bar {
-      display: flex; gap: 8px; margin-bottom: 20px;
-    }
-    .search-bar input {
-      flex: 1; padding: 10px 14px; border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm); font-size: 0.92rem; background: var(--surface);
-    }
-    .search-bar button {
-      padding: 10px 18px; border-radius: var(--radius-sm); background: var(--primary);
-      color: #fff; border: none; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif;
-    }
+{% block head %}
+<style>
+  .filter-bar {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
+  }
+  .filter-chip {
+    padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: 600;
+    border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    text-decoration: none; transition: all 0.15s; white-space: nowrap;
+  }
+  .filter-chip:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
+  .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .filter-chip .badge {
+    display: inline-block; background: rgba(0,0,0,0.12); padding: 1px 7px;
+    border-radius: 50px; font-size: 0.72rem; margin-left: 4px;
+  }
+  .filter-chip.active .badge { background: rgba(255,255,255,0.3); }
+  .search-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+  .search-bar input {
+    flex: 1; padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 0.92rem; background: var(--surface);
+  }
+  .search-bar button {
+    padding: 10px 18px; border-radius: var(--radius-sm); background: var(--primary);
+    color: #fff; border: none; font-weight: 600; cursor: pointer; font-family: 'Roboto', sans-serif;
+  }
+  .account-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); margin-bottom: 8px; gap: 12px;
+    text-decoration: none; color: var(--text); transition: border-color 0.15s;
+  }
+  .account-row:hover { border-color: var(--primary); text-decoration: none; }
+  .account-info h3 { font-size: 0.95rem; font-family: 'Roboto', sans-serif; margin: 0 0 2px; }
+  .account-info .email { font-size: 0.82rem; color: var(--text-muted); }
+  .account-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .badge-sm { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 50px; }
+  .badge-ticket { background: #edf5f0; color: var(--success); border: 1px solid var(--success); }
+  .badge-no-ticket { background: #fdf0ee; color: var(--error); border: 1px solid var(--error); }
+  .badge-validated { background: #e8f4fd; color: #2563eb; border: 1px solid #2563eb; }
+  .badge-role { background: #fff8ee; color: var(--orange); border: 1px solid var(--orange); }
+  .account-balance {
+    font-family: 'Roboto', sans-serif; font-weight: 700; font-size: 1.1rem;
+    color: var(--success); white-space: nowrap;
+  }
+  .account-right { text-align: right; display: flex; align-items: center; gap: 8px; }
+  .btn-reset-link {
+    padding: 6px 10px; border-radius: var(--radius-sm); font-size: 0.72rem;
+    font-weight: 600; border: 1.5px solid var(--orange); background: #fff8ee;
+    color: var(--orange); cursor: pointer; white-space: nowrap; font-family: 'Roboto', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-reset-link:hover { background: var(--orange); color: #fff; }
+  .btn-reset-link.copied { background: var(--success); border-color: var(--success); color: #fff; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--brown); color: #fff; padding: 12px 24px; border-radius: 50px;
+    font-size: 0.88rem; font-weight: 600; z-index: 999; opacity: 0;
+    transition: opacity 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+{% endblock %}
 
-    .account-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 16px; background: var(--surface); border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm); margin-bottom: 8px; gap: 12px;
-      text-decoration: none; color: var(--text); transition: border-color 0.15s;
-    }
-    .account-row:hover { border-color: var(--primary); text-decoration: none; }
-    .account-info h3 { font-size: 0.95rem; font-family: 'DM Sans', sans-serif; margin: 0 0 2px; }
-    .account-info .email { font-size: 0.82rem; color: var(--text-muted); }
-    .account-badges { display: flex; gap: 6px; flex-wrap: wrap; }
-    .badge-sm {
-      font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 50px;
-    }
-    .badge-ticket { background: #edf5f0; color: var(--success); border: 1px solid var(--success); }
-    .badge-no-ticket { background: #fdf0ee; color: var(--error); border: 1px solid var(--error); }
-    .badge-validated { background: #e8f4fd; color: #2563eb; border: 1px solid #2563eb; }
-    .badge-role { background: #fff8ee; color: var(--orange); border: 1px solid var(--orange); }
-    .account-balance {
-      font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.1rem;
-      color: var(--success); white-space: nowrap;
-    }
-    .account-right { text-align: right; display: flex; align-items: center; gap: 8px; }
-    .btn-reset-link {
-      padding: 6px 10px; border-radius: var(--radius-sm); font-size: 0.72rem;
-      font-weight: 600; border: 1.5px solid var(--orange); background: #fff8ee;
-      color: var(--orange); cursor: pointer; white-space: nowrap; font-family: 'DM Sans', sans-serif;
-      transition: all 0.15s;
-    }
-    .btn-reset-link:hover { background: var(--orange); color: #fff; }
-    .btn-reset-link.copied { background: var(--success); border-color: var(--success); color: #fff; }
-    .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      background: var(--brown); color: #fff; padding: 12px 24px; border-radius: 50px;
-      font-size: 0.88rem; font-weight: 600; z-index: 999; opacity: 0;
-      transition: opacity 0.3s; pointer-events: none;
-    }
-    .toast.show { opacity: 1; }
-  </style>
-</head>
-<body>
-  <nav class="navbar">
-    <a href="/admin/dashboard" class="nav-brand">&larr; Admin</a>
-    <span class="nav-brand">Comptes</span>
-  </nav>
-  <main class="container" style="max-width:720px;">
-    <div class="page-header">
-      <h1>Comptes ({{ users|length }})</h1>
-    </div>
+{% block content %}
+<div class="page-header">
+  <h1>Comptes ({{ users|length }})</h1>
+</div>
 
-    <!-- Search -->
-    <form class="search-bar" method="get" action="/admin/accounts">
-      <input type="hidden" name="filter" value="{{ filter }}" />
-      <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par nom ou email..." />
-      <button type="submit">Chercher</button>
-    </form>
+<!-- Search -->
+<form class="search-bar" method="get" action="/admin/accounts">
+  <input type="hidden" name="filter" value="{{ filter }}" />
+  <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par nom ou email..." />
+  <button type="submit">Chercher</button>
+</form>
 
-    <!-- Filters -->
-    <div class="filter-bar">
-      <a href="/admin/accounts?filter=all" class="filter-chip {% if filter == 'all' %}active{% endif %}">
-        Tous <span class="badge">{{ counts.all }}</span>
-      </a>
-      <a href="/admin/accounts?filter=no_ticket" class="filter-chip {% if filter == 'no_ticket' %}active{% endif %}">
-        Sans billet <span class="badge">{{ counts.no_ticket }}</span>
-      </a>
-      <a href="/admin/accounts?filter=has_ticket" class="filter-chip {% if filter == 'has_ticket' %}active{% endif %}">
-        Avec billet <span class="badge">{{ counts.has_ticket }}</span>
-      </a>
-      <a href="/admin/accounts?filter=not_validated" class="filter-chip {% if filter == 'not_validated' %}active{% endif %}">
-        Non valid&eacute; <span class="badge">{{ counts.not_validated }}</span>
-      </a>
-      <a href="/admin/accounts?filter=validated" class="filter-chip {% if filter == 'validated' %}active{% endif %}">
-        Valid&eacute;s <span class="badge">{{ counts.validated }}</span>
-      </a>
-      <a href="/admin/accounts?filter=bartenders" class="filter-chip {% if filter == 'bartenders' %}active{% endif %}">
-        Barmen
-      </a>
-      <a href="/admin/accounts?filter=scanners" class="filter-chip {% if filter == 'scanners' %}active{% endif %}">
-        Scanners
-      </a>
-      <a href="/admin/accounts?filter=sub_admins" class="filter-chip {% if filter == 'sub_admins' %}active{% endif %}">
-        Sub-admins
-      </a>
-    </div>
+<!-- Filters -->
+<div class="filter-bar">
+  <a href="/admin/accounts?filter=all" class="filter-chip {% if filter == 'all' %}active{% endif %}">
+    Tous <span class="badge">{{ counts.all }}</span>
+  </a>
+  <a href="/admin/accounts?filter=no_ticket" class="filter-chip {% if filter == 'no_ticket' %}active{% endif %}">
+    Sans billet <span class="badge">{{ counts.no_ticket }}</span>
+  </a>
+  <a href="/admin/accounts?filter=has_ticket" class="filter-chip {% if filter == 'has_ticket' %}active{% endif %}">
+    Avec billet <span class="badge">{{ counts.has_ticket }}</span>
+  </a>
+  <a href="/admin/accounts?filter=not_validated" class="filter-chip {% if filter == 'not_validated' %}active{% endif %}">
+    Non valid&eacute; <span class="badge">{{ counts.not_validated }}</span>
+  </a>
+  <a href="/admin/accounts?filter=validated" class="filter-chip {% if filter == 'validated' %}active{% endif %}">
+    Valid&eacute;s <span class="badge">{{ counts.validated }}</span>
+  </a>
+  <a href="/admin/accounts?filter=bartenders" class="filter-chip {% if filter == 'bartenders' %}active{% endif %}">Barmen</a>
+  <a href="/admin/accounts?filter=scanners" class="filter-chip {% if filter == 'scanners' %}active{% endif %}">Scanners</a>
+  <a href="/admin/accounts?filter=sub_admins" class="filter-chip {% if filter == 'sub_admins' %}active{% endif %}">Sub-admins</a>
+</div>
 
-    <!-- Pending tickets (not yet assigned) -->
-    {% if pending_tickets %}
-    <div style="margin-bottom: 20px;">
-      <h2 style="font-size: 1.05rem; margin-bottom: 10px;">Billets non attribu&eacute;s</h2>
-      {% for pt in pending_tickets %}
-      <div class="account-row" style="cursor: default; border-color: var(--orange); background: #fffaf5;">
-        <div class="account-info">
-          <h3 style="color: var(--text-muted);">&#x1F3AB; {{ pt.ticket_type }}</h3>
-          <span class="email" style="font-style: italic;">&Agrave; identifier par {{ pt.buyer.name }}</span>
-          <div class="account-badges" style="margin-top:4px;">
-            <span class="badge-sm" style="background:#fff8ee; color:var(--orange); border:1px solid var(--orange);">En attente</span>
-          </div>
-        </div>
+<!-- Pending tickets (not yet assigned) -->
+{% if pending_tickets %}
+<div style="margin-bottom: 20px;">
+  <h2 style="font-size: 1.05rem; margin-bottom: 10px;">Billets non attribu&eacute;s</h2>
+  {% for pt in pending_tickets %}
+  <div class="account-row" style="cursor: default; border-color: var(--orange); background: #fffaf5;">
+    <div class="account-info">
+      <h3 style="color: var(--text-muted);">&#x1F3AB; {{ pt.ticket_type }}</h3>
+      <span class="email" style="font-style: italic;">&Agrave; identifier par {{ pt.buyer.name }}</span>
+      <div class="account-badges" style="margin-top:4px;">
+        <span class="badge-sm" style="background:#fff8ee; color:var(--orange); border:1px solid var(--orange);">En attente</span>
       </div>
-      {% endfor %}
     </div>
-    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 
-    <!-- Account list -->
-    {% for u in users %}
-    <a href="/admin/accounts/{{ u.id }}" class="account-row">
-      <div class="account-info">
-        <h3>{{ u.name }}</h3>
-        <span class="email">{{ u.email }}</span>
-        <div class="account-badges" style="margin-top:4px;">
-          {% if u.ticket_purchased %}
-            <span class="badge-sm badge-ticket">Billet</span>
-          {% else %}
-            <span class="badge-sm badge-no-ticket">Pas de billet</span>
-          {% endif %}
-          {% if u.ticket_scanned %}
-            <span class="badge-sm badge-validated">Entr&eacute;e valid&eacute;e</span>
-          {% endif %}
-          {% if u.is_admin %}<span class="badge-sm badge-role">Admin</span>{% endif %}
-          {% if u.is_bartender %}<span class="badge-sm badge-role">Barman</span>{% endif %}
-          {% if u.is_scanner %}<span class="badge-sm badge-role">Scanner</span>{% endif %}
-          {% if u.is_sub_admin %}<span class="badge-sm badge-role">Sub-admin</span>{% endif %}
-        </div>
-      </div>
-      <div class="account-right">
-        <button class="btn-reset-link" onclick="event.preventDefault();event.stopPropagation();genResetLink(this,{{ u.id }})">Changer MDP</button>
-        <div class="account-balance">{{ "%.2f"|format(u.balance_cents / 100) }} &euro;</div>
-      </div>
-    </a>
-    {% else %}
-    <p style="color:#888; text-align:center; margin-top:32px;">Aucun compte trouv&eacute;.</p>
-    {% endfor %}
-  </main>
+<!-- Account list -->
+{% for u in users %}
+<a href="/admin/accounts/{{ u.id }}" class="account-row">
+  <div class="account-info">
+    <h3>{{ u.name }}</h3>
+    <span class="email">{{ u.email }}</span>
+    <div class="account-badges" style="margin-top:4px;">
+      {% if u.ticket_purchased %}
+        <span class="badge-sm badge-ticket">Billet</span>
+      {% else %}
+        <span class="badge-sm badge-no-ticket">Pas de billet</span>
+      {% endif %}
+      {% if u.ticket_scanned %}
+        <span class="badge-sm badge-validated">Entr&eacute;e valid&eacute;e</span>
+      {% endif %}
+      {% if u.is_admin %}<span class="badge-sm badge-role">Admin</span>{% endif %}
+      {% if u.is_bartender %}<span class="badge-sm badge-role">Barman</span>{% endif %}
+      {% if u.is_scanner %}<span class="badge-sm badge-role">Scanner</span>{% endif %}
+      {% if u.is_sub_admin %}<span class="badge-sm badge-role">Sub-admin</span>{% endif %}
+    </div>
+  </div>
+  <div class="account-right">
+    <button class="btn-reset-link" onclick="event.preventDefault();event.stopPropagation();genResetLink(this,{{ u.id }})">Changer MDP</button>
+    <div class="account-balance">{{ "%.2f"|format(u.balance_cents / 100) }} &euro;</div>
+  </div>
+</a>
+{% else %}
+<p style="color:#888; text-align:center; margin-top:32px;">Aucun compte trouv&eacute;.</p>
+{% endfor %}
 
-  <div class="toast" id="toast">Lien copié !</div>
+<div class="toast" id="toast">Lien copi&eacute; !</div>
+{% endblock %}
 
-  <script>
-  async function genResetLink(btn, userId) {
-    btn.textContent = '...';
-    try {
-      const res = await fetch(`/admin/accounts/${userId}/reset-link`, {method:'POST'});
-      const data = await res.json();
-      if (data.ok) {
-        await navigator.clipboard.writeText(data.link);
-        btn.textContent = '✓ Copié';
-        btn.classList.add('copied');
-        const toast = document.getElementById('toast');
-        toast.classList.add('show');
-        setTimeout(() => { toast.classList.remove('show'); }, 2000);
-        setTimeout(() => { btn.textContent = 'Changer MDP'; btn.classList.remove('copied'); }, 3000);
-      } else {
-        btn.textContent = '✗ Erreur';
-        setTimeout(() => { btn.textContent = 'Changer MDP'; }, 2000);
-      }
-    } catch(e) {
-      btn.textContent = '✗ Erreur';
+{% block scripts %}
+<script>
+async function genResetLink(btn, userId) {
+  btn.textContent = '...';
+  try {
+    const res = await fetch(`/admin/accounts/${userId}/reset-link`, {method:'POST'});
+    const data = await res.json();
+    if (data.ok) {
+      await navigator.clipboard.writeText(data.link);
+      btn.textContent = '\u2713 Copi\u00e9';
+      btn.classList.add('copied');
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 2000);
+      setTimeout(() => { btn.textContent = 'Changer MDP'; btn.classList.remove('copied'); }, 3000);
+    } else {
+      btn.textContent = '\u2717 Erreur';
       setTimeout(() => { btn.textContent = 'Changer MDP'; }, 2000);
     }
+  } catch(e) {
+    btn.textContent = '\u2717 Erreur';
+    setTimeout(() => { btn.textContent = 'Changer MDP'; }, 2000);
   }
-  </script>
-</body>
-</html>
+}
+</script>
+{% endblock %}

@@ -1,138 +1,95 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Barmen — RTM Admin</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=2" />
-  <style>
-    .bartender-card {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-    }
-    .bartender-info {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex: 1;
-    }
-    .bartender-avatar {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--surface2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      flex-shrink: 0;
-    }
-    .bartender-meta h3 {
-      font-size: 1rem;
-      margin: 0 0 2px;
-      font-family: 'Roboto', sans-serif;
-    }
-    .bartender-meta .email {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
-    .bartender-meta .status {
-      font-size: 0.75rem;
-      margin-top: 2px;
-    }
-    .status-registered { color: var(--success); }
-    .status-pending { color: var(--orange); }
-    .btn-remove {
-      padding: 6px 14px;
-      border-radius: 50px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1.5px solid var(--error);
-      background: #fdf0ee;
-      color: var(--error);
-      font-family: 'Roboto', sans-serif;
-    }
-    .btn-remove:hover { background: var(--error); color: #fff; }
-    .info-box {
-      background: #fff8ee;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 14px 18px;
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-      line-height: 1.6;
-    }
-    .info-box strong { color: var(--text); }
-  </style>
-</head>
-<body>
-  <nav class="navbar">
-    <a href="/admin/dashboard" class="nav-brand">&larr; Admin</a>
-    <span class="nav-brand">Barmen</span>
-  </nav>
+{% extends "admin/base_admin.html" %}
+{% set active_tab = "team" %}
+{% block title %}Barmen{% endblock %}
 
-  <main class="container">
-    <div class="page-header">
-      <h1>G&eacute;rer les barmen</h1>
-      <p>Ajoutez les personnes autoris&eacute;es &agrave; utiliser l'interface bar.</p>
-    </div>
+{% block head %}
+<style>
+  .role-card {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+    padding: 18px; margin-bottom: 12px; display: flex; align-items: center;
+    justify-content: space-between; gap: 14px;
+  }
+  .role-info { display: flex; align-items: center; gap: 14px; flex: 1; }
+  .role-avatar {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--surface2);
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;
+  }
+  .role-meta h3 { font-size: 1rem; margin: 0 0 2px; font-family: 'Roboto', sans-serif; }
+  .role-meta .email { color: var(--text-muted); font-size: 0.85rem; }
+  .role-meta .status { font-size: 0.75rem; margin-top: 2px; }
+  .status-registered { color: var(--success); }
+  .status-pending { color: var(--orange); }
+  .btn-remove {
+    padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--error); background: #fdf0ee;
+    color: var(--error); font-family: 'Roboto', sans-serif;
+  }
+  .btn-remove:hover { background: var(--error); color: #fff; }
+  .info-box {
+    background: #fff8ee; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px 18px; font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;
+  }
+  .info-box strong { color: var(--text); }
+  .team-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .team-tab {
+    padding: 8px 18px; border-radius: 50px; font-size: 0.85rem; font-weight: 600;
+    border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    text-decoration: none; transition: all 0.15s;
+  }
+  .team-tab:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
+  .team-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+</style>
+{% endblock %}
 
-    <div class="info-box">
-      <strong>Comment &ccedil;a marche :</strong> ajoutez le nom et l'email du barman ci-dessous.
-      S'il a d&eacute;j&agrave; un compte, il obtiendra directement l'acc&egrave;s bar.
-      Sinon, un compte sera cr&eacute;&eacute; — il devra se connecter avec son email
-      et r&eacute;initialiser son mot de passe si n&eacute;cessaire.
-      Un bouton <strong>Bar</strong> apparaitra dans le menu du barman une fois connect&eacute;.
-    </div>
+{% block content %}
+<div class="page-header">
+  <h1>G&eacute;rer l'&eacute;quipe</h1>
+</div>
 
-    <!-- Add bartender form -->
-    <div class="card-form">
-      <h2>Ajouter un barman</h2>
-      <form method="post" action="/admin/bartenders/add">
-        <label>Nom
-          <input type="text" name="name" required placeholder="Jean Dupont" />
-        </label>
-        <label>Email
-          <input type="email" name="email" required placeholder="jean@example.com" />
-        </label>
-        <button type="submit" class="btn-primary btn-full">Ajouter</button>
-      </form>
-    </div>
+<div class="team-tabs">
+  <a href="/admin/bartenders" class="team-tab active">Barmen</a>
+  <a href="/admin/scanners" class="team-tab">Scanners</a>
+  <a href="/admin/sub-admins" class="team-tab">Co-organisateurs</a>
+</div>
 
-    <div style="margin-top: 28px;">
-      <h2>Barmen actuels</h2>
+<div class="info-box">
+  <strong>Comment &ccedil;a marche :</strong> ajoutez le nom et l'email du barman ci-dessous.
+  S'il a d&eacute;j&agrave; un compte, il obtiendra directement l'acc&egrave;s bar.
+  Sinon, un compte sera cr&eacute;&eacute; — il devra r&eacute;initialiser son mot de passe.
+  Un bouton <strong>Bar</strong> apparaitra dans son menu.
+</div>
 
-      {% for bt in bartenders %}
-      <div class="bartender-card">
-        <div class="bartender-info">
-          <div class="bartender-avatar">B</div>
-          <div class="bartender-meta">
-            <h3>{{ bt.name }}</h3>
-            <span class="email">{{ bt.email }}</span>
-            {% if bt.ticket_purchased or bt.is_admin %}
-            <div class="status status-registered">Compte actif</div>
-            {% else %}
-            <div class="status status-pending">En attente d'inscription</div>
-            {% endif %}
-          </div>
-        </div>
-        <form method="post" action="/admin/bartenders/{{ bt.id }}/remove">
-          <button type="submit" class="btn-remove">Retirer</button>
-        </form>
+<div class="card-form">
+  <h2>Ajouter un barman</h2>
+  <form method="post" action="/admin/bartenders/add">
+    <label>Nom <input type="text" name="name" required placeholder="Jean Dupont" /></label>
+    <label>Email <input type="email" name="email" required placeholder="jean@example.com" /></label>
+    <button type="submit" class="btn-primary btn-full">Ajouter</button>
+  </form>
+</div>
+
+<div style="margin-top: 28px;">
+  <h2>Barmen actuels</h2>
+  {% for bt in role_users %}
+  <div class="role-card">
+    <div class="role-info">
+      <div class="role-avatar">B</div>
+      <div class="role-meta">
+        <h3>{{ bt.name }}</h3>
+        <span class="email">{{ bt.email }}</span>
+        {% if bt.ticket_purchased or bt.is_admin %}
+        <div class="status status-registered">Compte actif</div>
+        {% else %}
+        <div class="status status-pending">En attente d'inscription</div>
+        {% endif %}
       </div>
-      {% else %}
-      <p style="color: #888; margin-top: 16px;">Aucun barman ajout&eacute;.</p>
-      {% endfor %}
     </div>
-  </main>
-</body>
-</html>
+    <form method="post" action="/admin/bartenders/{{ bt.id }}/remove">
+      <button type="submit" class="btn-remove">Retirer</button>
+    </form>
+  </div>
+  {% else %}
+  <p style="color: #888; margin-top: 16px;">Aucun barman ajout&eacute;.</p>
+  {% endfor %}
+</div>
+{% endblock %}
