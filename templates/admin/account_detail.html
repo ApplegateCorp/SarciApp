@@ -143,6 +143,16 @@
         <button type="submit" class="btn-action btn-action-success">&#x2714; Valider le billet</button>
       </form>
       {% endif %}
+
+      <!-- Delete account -->
+      {% if not account.is_admin %}
+      <form method="post" action="/admin/accounts/{{ account.id }}/delete" style="margin-top: 20px;"
+            onsubmit="return confirm('Supprimer le compte de {{ account.name }} ({{ account.email }}) ? Cette action est irr&eacute;versible.');">
+        <button type="submit" class="btn-action" style="border-color:var(--error); color:var(--error);">
+          &#x1F5D1; Supprimer ce compte
+        </button>
+      </form>
+      {% endif %}
     </div>
 
     <script>
