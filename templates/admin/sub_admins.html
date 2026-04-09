@@ -1,80 +1,85 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sub-admins — RTM Admin</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=2" />
-  <style>
-    .role-card {
-      background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
-      padding: 18px; margin-bottom: 12px; display: flex; align-items: center;
-      justify-content: space-between; gap: 14px;
-    }
-    .role-info { display: flex; align-items: center; gap: 14px; flex: 1; }
-    .role-avatar {
-      width: 44px; height: 44px; border-radius: 50%; background: var(--surface2);
-      display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;
-    }
-    .role-meta h3 { font-size: 1rem; margin: 0 0 2px; font-family: 'Roboto', sans-serif; }
-    .role-meta .email { color: var(--text-muted); font-size: 0.85rem; }
-    .btn-remove {
-      padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: 600;
-      cursor: pointer; border: 1.5px solid var(--error); background: #fdf0ee;
-      color: var(--error); font-family: 'Roboto', sans-serif;
-    }
-    .btn-remove:hover { background: var(--error); color: #fff; }
-    .info-box {
-      background: #fff8ee; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-      padding: 14px 18px; font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;
-    }
-    .info-box strong { color: var(--text); }
-  </style>
-</head>
-<body>
-  <nav class="navbar">
-    <a href="/admin/dashboard" class="nav-brand">&larr; Admin</a>
-    <span class="nav-brand">Sub-admins</span>
-  </nav>
-  <main class="container">
-    <div class="page-header">
-      <h1>Co-organisateurs</h1>
-      <p>Les sub-admins ont les m&ecirc;mes droits que l'admin : g&eacute;rer le menu, les barmen, les scanners, voir les comptes, les analytics.</p>
-    </div>
+{% extends "admin/base_admin.html" %}
+{% set active_tab = "team" %}
+{% block title %}Sub-admins{% endblock %}
 
-    <div class="info-box">
-      <strong>Droits des sub-admins :</strong> Dashboard, gestion du menu, gestion des barmen et scanners,
-      consultation des comptes, analytics, scanner les billets &agrave; l'entr&eacute;e, interface bar.
-    </div>
+{% block head %}
+<style>
+  .role-card {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+    padding: 18px; margin-bottom: 12px; display: flex; align-items: center;
+    justify-content: space-between; gap: 14px;
+  }
+  .role-info { display: flex; align-items: center; gap: 14px; flex: 1; }
+  .role-avatar {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--surface2);
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;
+  }
+  .role-meta h3 { font-size: 1rem; margin: 0 0 2px; font-family: 'Roboto', sans-serif; }
+  .role-meta .email { color: var(--text-muted); font-size: 0.85rem; }
+  .btn-remove {
+    padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--error); background: #fdf0ee;
+    color: var(--error); font-family: 'Roboto', sans-serif;
+  }
+  .btn-remove:hover { background: var(--error); color: #fff; }
+  .info-box {
+    background: #fff8ee; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px 18px; font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;
+  }
+  .info-box strong { color: var(--text); }
+  .team-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .team-tab {
+    padding: 8px 18px; border-radius: 50px; font-size: 0.85rem; font-weight: 600;
+    border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    text-decoration: none; transition: all 0.15s;
+  }
+  .team-tab:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
+  .team-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+</style>
+{% endblock %}
 
-    <div class="card-form">
-      <h2>Ajouter un co-organisateur</h2>
-      <form method="post" action="/admin/sub-admins/add">
-        <label>Nom <input type="text" name="name" required placeholder="Marie Martin" /></label>
-        <label>Email <input type="email" name="email" required placeholder="marie@example.com" /></label>
-        <button type="submit" class="btn-primary btn-full">Ajouter</button>
-      </form>
-    </div>
+{% block content %}
+<div class="page-header">
+  <h1>G&eacute;rer l'&eacute;quipe</h1>
+</div>
 
-    <div style="margin-top: 28px;">
-      <h2>Sub-admins actuels</h2>
-      {% for u in role_users %}
-      <div class="role-card">
-        <div class="role-info">
-          <div class="role-avatar">A</div>
-          <div class="role-meta">
-            <h3>{{ u.name }}</h3>
-            <span class="email">{{ u.email }}</span>
-          </div>
-        </div>
-        <form method="post" action="/admin/sub-admins/{{ u.id }}/remove">
-          <button type="submit" class="btn-remove">Retirer</button>
-        </form>
+<div class="team-tabs">
+  <a href="/admin/bartenders" class="team-tab">Barmen</a>
+  <a href="/admin/scanners" class="team-tab">Scanners</a>
+  <a href="/admin/sub-admins" class="team-tab active">Co-organisateurs</a>
+</div>
+
+<div class="info-box">
+  <strong>Droits des sub-admins :</strong> Dashboard, gestion du menu, gestion des barmen et scanners,
+  consultation des comptes, analytics, scanner les billets &agrave; l'entr&eacute;e, interface bar.
+</div>
+
+<div class="card-form">
+  <h2>Ajouter un co-organisateur</h2>
+  <form method="post" action="/admin/sub-admins/add">
+    <label>Nom <input type="text" name="name" required placeholder="Marie Martin" /></label>
+    <label>Email <input type="email" name="email" required placeholder="marie@example.com" /></label>
+    <button type="submit" class="btn-primary btn-full">Ajouter</button>
+  </form>
+</div>
+
+<div style="margin-top: 28px;">
+  <h2>Sub-admins actuels</h2>
+  {% for u in role_users %}
+  <div class="role-card">
+    <div class="role-info">
+      <div class="role-avatar">A</div>
+      <div class="role-meta">
+        <h3>{{ u.name }}</h3>
+        <span class="email">{{ u.email }}</span>
       </div>
-      {% else %}
-      <p style="color: #888; margin-top: 16px;">Aucun sub-admin ajout&eacute;.</p>
-      {% endfor %}
     </div>
-  </main>
-</body>
-</html>
+    <form method="post" action="/admin/sub-admins/{{ u.id }}/remove">
+      <button type="submit" class="btn-remove">Retirer</button>
+    </form>
+  </div>
+  {% else %}
+  <p style="color: #888; margin-top: 16px;">Aucun sub-admin ajout&eacute;.</p>
+  {% endfor %}
+</div>
+{% endblock %}

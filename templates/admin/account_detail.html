@@ -1,254 +1,254 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ account.name }} — Admin</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=2" />
-  <style>
-    .profile-card {
-      background: var(--surface); border: 1.5px solid var(--border);
-      border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
-      text-align: center;
-    }
-    .profile-name { font-size: 1.5rem; font-family: 'Playfair Display', serif; font-weight: 900; margin-bottom: 4px; }
-    .profile-email { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px; }
-    .profile-badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
-    .badge-lg {
-      font-size: 0.8rem; font-weight: 600; padding: 4px 14px; border-radius: 50px;
-    }
-    .badge-ticket { background: #edf5f0; color: var(--success); border: 1.5px solid var(--success); }
-    .badge-no-ticket { background: #fdf0ee; color: var(--error); border: 1.5px solid var(--error); }
-    .badge-validated { background: #e8f4fd; color: #2563eb; border: 1.5px solid #2563eb; }
-    .badge-role { background: #fff8ee; color: var(--orange); border: 1.5px solid var(--orange); }
+{% extends "admin/base_admin.html" %}
+{% set active_tab = "accounts" %}
+{% block title %}{{ account.name }} — Admin{% endblock %}
 
-    .balance-display {
-      font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 900;
-      color: var(--success); margin: 12px 0;
-    }
+{% block head %}
+<style>
+  .profile-card {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .profile-name { font-size: 1.5rem; font-family: 'Playfair Display', serif; font-weight: 900; margin-bottom: 4px; }
+  .profile-email { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px; }
+  .profile-badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .badge-lg {
+    font-size: 0.8rem; font-weight: 600; padding: 4px 14px; border-radius: 50px;
+  }
+  .badge-ticket { background: #edf5f0; color: var(--success); border: 1.5px solid var(--success); }
+  .badge-no-ticket { background: #fdf0ee; color: var(--error); border: 1.5px solid var(--error); }
+  .badge-validated { background: #e8f4fd; color: #2563eb; border: 1.5px solid #2563eb; }
+  .badge-role { background: #fff8ee; color: var(--orange); border: 1.5px solid var(--orange); }
 
-    .qr-section {
-      text-align: center; margin: 20px 0;
-      background: var(--cream); border: 1.5px dashed var(--border);
-      border-radius: var(--radius-sm); padding: 20px;
-    }
-    .qr-section img { max-width: 180px; border-radius: 8px; background: #fff; padding: 8px; }
-    .qr-section p { color: var(--text-muted); font-size: 0.82rem; margin-top: 8px; }
+  .balance-display {
+    font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 900;
+    color: var(--success); margin: 12px 0;
+  }
 
-    .admin-actions-row {
-      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 20px 0;
-    }
-    .admin-actions-row form { display: inline; }
-    .btn-action {
-      padding: 8px 18px; border-radius: 50px; font-size: 0.85rem; font-weight: 600;
-      cursor: pointer; border: 1.5px solid var(--border); background: var(--surface);
-      color: var(--text); font-family: 'DM Sans', sans-serif; transition: all 0.15s;
-    }
-    .btn-action:hover { border-color: var(--primary); color: var(--primary); }
-    .btn-action-success { border-color: var(--success); color: var(--success); }
-    .btn-action-success:hover { background: var(--success); color: #fff; }
+  .qr-section {
+    text-align: center; margin: 20px 0;
+    background: var(--cream); border: 1.5px dashed var(--border);
+    border-radius: var(--radius-sm); padding: 20px;
+  }
+  .qr-section img { max-width: 180px; border-radius: 8px; background: #fff; padding: 8px; }
+  .qr-section p { color: var(--text-muted); font-size: 0.82rem; margin-top: 8px; }
 
-    .tx-table { width: 100%; margin-top: 20px; }
-    .tx-header {
-      display: flex; justify-content: space-between; padding: 8px 0;
-      font-size: 0.78rem; color: var(--text-muted); font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.05em;
-      border-bottom: 2px solid var(--border);
-    }
-    .tx-row-detail {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem;
-    }
-    .tx-row-detail:last-child { border-bottom: none; }
-    .tx-type {
-      font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 50px;
-      text-transform: uppercase;
-    }
-    .tx-type-ticket { background: #edf5f0; color: var(--success); }
-    .tx-type-topup { background: #e8f4fd; color: #2563eb; }
-    .tx-type-drink { background: #fdf0ee; color: var(--error); }
-    .tx-amount-pos { color: var(--success); font-weight: 700; }
-    .tx-amount-neg { color: var(--error); font-weight: 700; }
-    .tx-date { color: var(--text-muted); font-size: 0.8rem; }
-    .tx-desc { font-size: 0.85rem; color: var(--text-muted); }
-  </style>
-</head>
-<body>
-  <nav class="navbar">
-    <a href="/admin/accounts" class="nav-brand">&larr; Comptes</a>
-    <span class="nav-brand">{{ account.name }}</span>
-  </nav>
-  <main class="container">
+  .admin-actions-row {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 20px 0;
+  }
+  .admin-actions-row form { display: inline; }
+  .btn-action {
+    padding: 8px 18px; border-radius: 50px; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--border); background: var(--surface);
+    color: var(--text); font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .btn-action:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-action-success { border-color: var(--success); color: var(--success); }
+  .btn-action-success:hover { background: var(--success); color: #fff; }
 
-    <div class="profile-card">
-      <div class="profile-name">{{ account.name }}</div>
-      <div class="profile-email">{{ account.email }}</div>
-      <div class="profile-badges">
-        {% if account.ticket_purchased %}
-          <span class="badge-lg badge-ticket">&#x2714; Billet achet&eacute;</span>
-        {% else %}
-          <span class="badge-lg badge-no-ticket">&#x2716; Pas de billet</span>
-        {% endif %}
-        {% if account.ticket_scanned %}
-          <span class="badge-lg badge-validated">&#x2714; Entr&eacute;e valid&eacute;e</span>
-        {% endif %}
-        {% if account.is_bartender %}<span class="badge-lg badge-role">Barman</span>{% endif %}
-        {% if account.is_scanner %}<span class="badge-lg badge-role">Scanner</span>{% endif %}
-        {% if account.is_sub_admin %}<span class="badge-lg badge-role">Sub-admin</span>{% endif %}
-      </div>
-      <div class="balance-display">{{ "%.2f"|format(account.balance_cents / 100) }} &euro;</div>
-      <div style="color:var(--text-muted); font-size:0.85rem;">Solde actuel</div>
-    </div>
+  .tx-table { width: 100%; margin-top: 20px; }
+  .tx-header {
+    display: flex; justify-content: space-between; padding: 8px 0;
+    font-size: 0.78rem; color: var(--text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--border);
+  }
+  .tx-row-detail {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem;
+  }
+  .tx-row-detail:last-child { border-bottom: none; }
+  .tx-type {
+    font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 50px;
+    text-transform: uppercase;
+  }
+  .tx-type-ticket { background: #edf5f0; color: var(--success); }
+  .tx-type-topup { background: #e8f4fd; color: #2563eb; }
+  .tx-type-drink { background: #fdf0ee; color: var(--error); }
+  .tx-amount-pos { color: var(--success); font-weight: 700; }
+  .tx-amount-neg { color: var(--error); font-weight: 700; }
+  .tx-date { color: var(--text-muted); font-size: 0.8rem; }
+  .tx-desc { font-size: 0.85rem; color: var(--text-muted); }
+  .btn-reset-link {
+    padding: 4px 8px; border-radius: var(--radius-sm); font-size: 0.7rem;
+    font-weight: 600; border: 1.5px solid var(--orange); background: #fff8ee;
+    color: var(--orange); cursor: pointer; font-family: 'Roboto', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-reset-link:hover { background: var(--orange); color: #fff; }
+</style>
+{% endblock %}
 
-    <!-- QR Code -->
-    <div class="qr-section">
-      <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code" />
-      <p>QR code de {{ account.name }} &mdash; Token : {{ account.token[:8] }}...</p>
-    </div>
+{% block content %}
+<div style="margin-bottom: 16px;">
+  <a href="/admin/accounts" style="color: var(--text-muted); font-size: 0.88rem; text-decoration: none;">&larr; Retour aux comptes</a>
+</div>
 
-    <!-- Admin actions -->
-    <div class="admin-actions-row" style="flex-direction: column; align-items: center;">
-      {% if not account.ticket_purchased %}
-      <form method="post" action="/admin/accounts/{{ account.id }}/grant-ticket"
-            style="background: var(--cream); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; width: 100%; max-width: 400px;">
-        <h3 style="margin: 0 0 12px; font-size: 1rem;">Attribuer un billet</h3>
-        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">
-          Type de billet
-          <select name="ticket_type" style="width: 100%; padding: 8px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; margin-top: 4px;">
-            <option value="Pass 2 Jours">Pass 2 Jours</option>
-            <option value="1 Jour Vendredi">1 Jour Vendredi</option>
-            <option value="1 Jour Samedi">1 Jour Samedi</option>
-          </select>
-        </label>
-        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">
-          A pay&eacute; ?
-          <select name="paid" id="paid-select-{{ account.id }}" onchange="toggleAmount(this)"
-                  style="width: 100%; padding: 8px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; margin-top: 4px;">
-            <option value="non" selected>Non (offert)</option>
-            <option value="oui">Oui (a pay&eacute;)</option>
-          </select>
-        </label>
-        <label class="amount-field" style="font-size: 0.85rem; font-weight: 600; display: none; margin-bottom: 8px;">
-          Montant pay&eacute; (&euro;)
-          <input type="number" name="amount" value="90" step="0.01" min="0"
-                 style="width: 100%; padding: 8px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; margin-top: 4px;" />
-        </label>
-        <button type="submit" class="btn-action btn-action-success" style="width: 100%; margin-top: 8px;">
-          &#x1F3AB; Attribuer le billet
-        </button>
-      </form>
-      {% endif %}
-      {% if account.ticket_purchased and not account.ticket_scanned %}
-      <form method="post" action="/admin/accounts/{{ account.id }}/validate-ticket" style="margin-top: 10px;">
-        <button type="submit" class="btn-action btn-action-success">&#x2714; Valider le billet</button>
-      </form>
-      {% endif %}
-
-      <!-- Delete account -->
-      {% if not account.is_admin %}
-      <form method="post" action="/admin/accounts/{{ account.id }}/delete" style="margin-top: 20px;"
-            onsubmit="return confirm('Supprimer le compte de {{ account.name }} ({{ account.email }}) ? Cette action est irr&eacute;versible.');">
-        <button type="submit" class="btn-action" style="border-color:var(--error); color:var(--error);">
-          &#x1F5D1; Supprimer ce compte
-        </button>
-      </form>
-      {% endif %}
-    </div>
-
-    <script>
-    function toggleAmount(sel) {
-      const form = sel.closest('form');
-      const amountField = form.querySelector('.amount-field');
-      amountField.style.display = sel.value === 'oui' ? 'block' : 'none';
-    }
-    </script>
-
-    <!-- Transaction history -->
-    <h2 style="margin-top: 28px;">Historique des transactions</h2>
-
-    {% if transactions %}
-    <div class="tx-table">
-      <div class="tx-header">
-        <span>Type</span>
-        <span>Description</span>
-        <span>Montant</span>
-        <span>Date</span>
-        <span></span>
-      </div>
-      {% for tx in transactions %}
-      {% set qty = tx.description.split(' x')[1]|int if ' x' in tx.description else 1 %}
-      {% set base_desc = tx.description.split(' x')[0] if ' x' in tx.description else tx.description %}
-      <div class="tx-row-detail" id="tx-row-{{ tx.id }}">
-        <span>
-          {% if tx.type == 'ticket' %}<span class="tx-type tx-type-ticket">Billet</span>
-          {% if not tx.paid %}<span class="tx-type" style="background:#fff8ee; color:var(--orange); margin-left:4px;">Offert</span>{% endif %}
-          {% elif tx.type == 'topup' %}<span class="tx-type tx-type-topup">Recharge</span>
-          {% elif tx.type == 'drink' %}<span class="tx-type tx-type-drink">Bar</span>
-          {% else %}<span class="tx-type">{{ tx.type }}</span>{% endif %}
-        </span>
-        <span class="tx-desc">
-          {{ base_desc }}
-          {% if tx.type == 'ticket' and qty > 1 %}
-            <span style="color:var(--text-muted); font-size:0.82rem;">&mdash; Qty : {{ qty }} &times; {{ "%.0f"|format(tx.amount_cents / qty / 100) }}&euro;</span>
-          {% endif %}
-        </span>
-        <span class="{% if tx.amount_cents >= 0 %}tx-amount-pos{% else %}tx-amount-neg{% endif %}">
-          {% if tx.amount_cents >= 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} &euro;
-        </span>
-        <span class="tx-date">{{ (tx.created_at|paris).strftime('%d/%m %H:%M') }}</span>
-        {% if tx.type == 'ticket' %}
-        <span>
-          <button class="btn-reset-link" onclick="toggleEdit({{ tx.id }})" style="font-size:0.7rem; padding:4px 8px;">Modifier</button>
-        </span>
-        {% else %}
-        <span></span>
-        {% endif %}
-      </div>
-      {% if tx.type == 'ticket' %}
-      <div id="tx-edit-{{ tx.id }}" style="display:none; padding:12px 0 16px; border-bottom:1px solid var(--border);">
-        <form method="post" action="/admin/transactions/{{ tx.id }}/edit" style="display:flex; flex-wrap:wrap; gap:8px; align-items:end;">
-          <label style="font-size:0.8rem; flex:1; min-width:120px;">
-            Type de billet
-            <select name="description" style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;">
-              <option value="Pass 2 Jours" {% if base_desc == 'Pass 2 Jours' %}selected{% endif %}>Pass 2 Jours</option>
-              <option value="1 Jour Vendredi" {% if base_desc == '1 Jour Vendredi' %}selected{% endif %}>1 Jour Vendredi</option>
-              <option value="1 Jour Samedi" {% if base_desc == '1 Jour Samedi' %}selected{% endif %}>1 Jour Samedi</option>
-            </select>
-          </label>
-          <label style="font-size:0.8rem; width:50px;">
-            Qty
-            <input type="number" name="qty" value="{{ qty }}" min="1" max="10"
-                   style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;" />
-          </label>
-          <label style="font-size:0.8rem; width:90px;">
-            Total (&euro;)
-            <input type="number" name="amount" value="{{ "%.2f"|format(tx.amount_cents / 100) }}" step="0.01" min="0"
-                   style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;" />
-          </label>
-          <label style="font-size:0.8rem; width:100px;">
-            Pay&eacute; ?
-            <select name="paid" style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;">
-              <option value="oui" {% if tx.paid %}selected{% endif %}>Oui</option>
-              <option value="non" {% if not tx.paid %}selected{% endif %}>Non (offert)</option>
-            </select>
-          </label>
-          <button type="submit" class="btn-action btn-action-success" style="padding:6px 14px; font-size:0.8rem;">Sauver</button>
-        </form>
-      </div>
-      {% endif %}
-      {% endfor %}
-    </div>
-
-    <script>
-    function toggleEdit(txId) {
-      const el = document.getElementById('tx-edit-' + txId);
-      el.style.display = el.style.display === 'none' ? 'block' : 'none';
-    }
-    </script>
+<div class="profile-card">
+  <div class="profile-name">{{ account.name }}</div>
+  <div class="profile-email">{{ account.email }}</div>
+  <div class="profile-badges">
+    {% if account.ticket_purchased %}
+      <span class="badge-lg badge-ticket">&#x2714; Billet achet&eacute;</span>
     {% else %}
-    <p style="color:#888; margin-top:12px;">Aucune transaction.</p>
+      <span class="badge-lg badge-no-ticket">&#x2716; Pas de billet</span>
     {% endif %}
+    {% if account.ticket_scanned %}
+      <span class="badge-lg badge-validated">&#x2714; Entr&eacute;e valid&eacute;e</span>
+    {% endif %}
+    {% if account.is_bartender %}<span class="badge-lg badge-role">Barman</span>{% endif %}
+    {% if account.is_scanner %}<span class="badge-lg badge-role">Scanner</span>{% endif %}
+    {% if account.is_sub_admin %}<span class="badge-lg badge-role">Sub-admin</span>{% endif %}
+  </div>
+  <div class="balance-display">{{ "%.2f"|format(account.balance_cents / 100) }} &euro;</div>
+  <div style="color:var(--text-muted); font-size:0.85rem;">Solde actuel</div>
+</div>
 
-  </main>
-</body>
-</html>
+<!-- QR Code -->
+<div class="qr-section">
+  <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code" />
+  <p>QR code de {{ account.name }} &mdash; Token : {{ account.token[:8] }}...</p>
+</div>
+
+<!-- Admin actions -->
+<div class="admin-actions-row" style="flex-direction: column; align-items: center;">
+  {% if not account.ticket_purchased %}
+  <form method="post" action="/admin/accounts/{{ account.id }}/grant-ticket"
+        style="background: var(--cream); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; width: 100%; max-width: 400px;">
+    <h3 style="margin: 0 0 12px; font-size: 1rem;">Attribuer un billet</h3>
+    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">
+      Type de billet
+      <select name="ticket_type" style="width: 100%; padding: 8px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; margin-top: 4px;">
+        <option value="Pass 2 Jours">Pass 2 Jours</option>
+        <option value="1 Jour Vendredi">1 Jour Vendredi</option>
+        <option value="1 Jour Samedi">1 Jour Samedi</option>
+      </select>
+    </label>
+    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">
+      A pay&eacute; ?
+      <select name="paid" id="paid-select-{{ account.id }}" onchange="toggleAmount(this)"
+              style="width: 100%; padding: 8px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; margin-top: 4px;">
+        <option value="non" selected>Non (offert)</option>
+        <option value="oui">Oui (a pay&eacute;)</option>
+      </select>
+    </label>
+    <label class="amount-field" style="font-size: 0.85rem; font-weight: 600; display: none; margin-bottom: 8px;">
+      Montant pay&eacute; (&euro;)
+      <input type="number" name="amount" value="90" step="0.01" min="0"
+             style="width: 100%; padding: 8px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; margin-top: 4px;" />
+    </label>
+    <button type="submit" class="btn-action btn-action-success" style="width: 100%; margin-top: 8px;">
+      &#x1F3AB; Attribuer le billet
+    </button>
+  </form>
+  {% endif %}
+  {% if account.ticket_purchased and not account.ticket_scanned %}
+  <form method="post" action="/admin/accounts/{{ account.id }}/validate-ticket" style="margin-top: 10px;">
+    <button type="submit" class="btn-action btn-action-success">&#x2714; Valider le billet</button>
+  </form>
+  {% endif %}
+
+  <!-- Delete account -->
+  {% if not account.is_admin %}
+  <form method="post" action="/admin/accounts/{{ account.id }}/delete" style="margin-top: 20px;"
+        onsubmit="return confirm('Supprimer le compte de {{ account.name }} ({{ account.email }}) ? Cette action est irr\u00e9versible.');">
+    <button type="submit" class="btn-action" style="border-color:var(--error); color:var(--error);">
+      &#x1F5D1; Supprimer ce compte
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+<!-- Transaction history -->
+<h2 style="margin-top: 28px;">Historique des transactions</h2>
+
+{% if transactions %}
+<div class="tx-table">
+  <div class="tx-header">
+    <span>Type</span>
+    <span>Description</span>
+    <span>Montant</span>
+    <span>Date</span>
+    <span></span>
+  </div>
+  {% for tx in transactions %}
+  {% set qty = tx.description.split(' x')[1]|int if ' x' in tx.description else 1 %}
+  {% set base_desc = tx.description.split(' x')[0] if ' x' in tx.description else tx.description %}
+  <div class="tx-row-detail" id="tx-row-{{ tx.id }}">
+    <span>
+      {% if tx.type == 'ticket' %}<span class="tx-type tx-type-ticket">Billet</span>
+      {% if not tx.paid %}<span class="tx-type" style="background:#fff8ee; color:var(--orange); margin-left:4px;">Offert</span>{% endif %}
+      {% elif tx.type == 'topup' %}<span class="tx-type tx-type-topup">Recharge</span>
+      {% elif tx.type == 'drink' %}<span class="tx-type tx-type-drink">Bar</span>
+      {% else %}<span class="tx-type">{{ tx.type }}</span>{% endif %}
+    </span>
+    <span class="tx-desc">
+      {{ base_desc }}
+      {% if tx.type == 'ticket' and qty > 1 %}
+        <span style="color:var(--text-muted); font-size:0.82rem;">&mdash; Qty : {{ qty }} &times; {{ "%.0f"|format(tx.amount_cents / qty / 100) }}&euro;</span>
+      {% endif %}
+    </span>
+    <span class="{% if tx.amount_cents >= 0 %}tx-amount-pos{% else %}tx-amount-neg{% endif %}">
+      {% if tx.amount_cents >= 0 %}+{% endif %}{{ "%.2f"|format(tx.amount_cents / 100) }} &euro;
+    </span>
+    <span class="tx-date">{{ (tx.created_at|paris).strftime('%d/%m %H:%M') }}</span>
+    {% if tx.type == 'ticket' %}
+    <span>
+      <button class="btn-reset-link" onclick="toggleEdit({{ tx.id }})">Modifier</button>
+    </span>
+    {% else %}
+    <span></span>
+    {% endif %}
+  </div>
+  {% if tx.type == 'ticket' %}
+  <div id="tx-edit-{{ tx.id }}" style="display:none; padding:12px 0 16px; border-bottom:1px solid var(--border);">
+    <form method="post" action="/admin/transactions/{{ tx.id }}/edit" style="display:flex; flex-wrap:wrap; gap:8px; align-items:end;">
+      <label style="font-size:0.8rem; flex:1; min-width:120px;">
+        Type de billet
+        <select name="description" style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;">
+          <option value="Pass 2 Jours" {% if base_desc == 'Pass 2 Jours' %}selected{% endif %}>Pass 2 Jours</option>
+          <option value="1 Jour Vendredi" {% if base_desc == '1 Jour Vendredi' %}selected{% endif %}>1 Jour Vendredi</option>
+          <option value="1 Jour Samedi" {% if base_desc == '1 Jour Samedi' %}selected{% endif %}>1 Jour Samedi</option>
+        </select>
+      </label>
+      <label style="font-size:0.8rem; width:50px;">
+        Qty
+        <input type="number" name="qty" value="{{ qty }}" min="1" max="10"
+               style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;" />
+      </label>
+      <label style="font-size:0.8rem; width:90px;">
+        Total (&euro;)
+        <input type="number" name="amount" value="{{ "%.2f"|format(tx.amount_cents / 100) }}" step="0.01" min="0"
+               style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;" />
+      </label>
+      <label style="font-size:0.8rem; width:100px;">
+        Pay&eacute; ?
+        <select name="paid" style="width:100%; padding:6px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem;">
+          <option value="oui" {% if tx.paid %}selected{% endif %}>Oui</option>
+          <option value="non" {% if not tx.paid %}selected{% endif %}>Non (offert)</option>
+        </select>
+      </label>
+      <button type="submit" class="btn-action btn-action-success" style="padding:6px 14px; font-size:0.8rem;">Sauver</button>
+    </form>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
+{% else %}
+<p style="color:#888; margin-top:12px;">Aucune transaction.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleAmount(sel) {
+  const form = sel.closest('form');
+  const amountField = form.querySelector('.amount-field');
+  amountField.style.display = sel.value === 'oui' ? 'block' : 'none';
+}
+function toggleEdit(txId) {
+  const el = document.getElementById('tx-edit-' + txId);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+{% endblock %}
