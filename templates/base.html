@@ -49,7 +49,7 @@
     .site-topbar-right .topbar-cta:hover { opacity: 0.88; color: #fff; }
 
     .pill-nav-wrapper {
-      background: var(--surface);
+      background: var(--bg);
       border-bottom: 1.5px solid var(--border);
       padding: 10px 16px;
       position: sticky;
@@ -62,7 +62,7 @@
       gap: 4px;
       max-width: 600px;
       margin: 0 auto;
-      background: var(--bg);
+      background: var(--surface);
       border-radius: 50px;
       padding: 4px;
       overflow-x: auto;
@@ -128,33 +128,19 @@
   <!-- Pill navigation -->
   <div class="pill-nav-wrapper">
     <nav class="pill-nav">
-      <a href="/" class="pill-item {% if active_tab == 'home' %}active{% endif %}">
-        <span class="pill-icon">&#x1F3E0;</span> Accueil
-      </a>
-      <a href="/info" class="pill-item {% if active_tab == 'info' %}active{% endif %}">
-        <span class="pill-icon">&#x2139;&#xFE0F;</span> Infos
-      </a>
+      <a href="/" class="pill-item {% if active_tab == 'home' %}active{% endif %}">Accueil</a>
+      <a href="/info" class="pill-item {% if active_tab == 'info' %}active{% endif %}">Infos</a>
       {% if user %}
-      <a href="/ticket" class="pill-item {% if active_tab == 'ticket' %}active{% endif %}">
-        <span class="pill-icon">&#x1F3AB;</span> Mon billet
-      </a>
-      <a href="/wallet" class="pill-item {% if active_tab == 'wallet' %}active{% endif %}">
-        <span class="pill-icon">&#x1F4B3;</span> Compte
-      </a>
+      <a href="/ticket" class="pill-item {% if active_tab == 'ticket' %}active{% endif %}">Mon billet</a>
+      <a href="/wallet" class="pill-item {% if active_tab == 'wallet' %}active{% endif %}">Compte</a>
       {% if user.ticket_scanned %}
-      <a href="/history" class="pill-item {% if active_tab == 'history' %}active{% endif %}">
-        <span class="pill-icon">&#x1F4DC;</span> Historique
-      </a>
+      <a href="/history" class="pill-item {% if active_tab == 'history' %}active{% endif %}">Historique</a>
       {% endif %}
       {% if user.is_bartender or user.is_admin or user.is_sub_admin %}
-      <a href="/admin/bar" class="pill-item {% if active_tab == 'bar' %}active{% endif %}">
-        <span class="pill-icon">&#x1F37A;</span> Bar
-      </a>
+      <a href="/admin/bar" class="pill-item {% if active_tab == 'bar' %}active{% endif %}">Bar</a>
       {% endif %}
       {% if user.is_scanner %}
-      <a href="/admin/entry" class="pill-item {% if active_tab == 'scanner' %}active{% endif %}">
-        <span class="pill-icon">&#x1F4F7;</span> Scanner
-      </a>
+      <a href="/admin/entry" class="pill-item {% if active_tab == 'scanner' %}active{% endif %}">Scanner</a>
       {% endif %}
       {% endif %}
     </nav>
