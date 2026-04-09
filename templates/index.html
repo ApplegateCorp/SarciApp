@@ -14,10 +14,10 @@
     <p class="hero-tagline">Hors du temps.</p>
     <div class="hero-actions">
       {% if not user %}
-        <a href="/register" class="btn-hero">Prendre mon billet</a>
-        <a href="/login" class="btn-hero-ghost">J'ai déjà un compte</a>
+        <a href="/register" class="btn-hero">R&eacute;cup&eacute;rer son compte</a>
+        <a href="/login" class="btn-hero-ghost">J'ai d&eacute;j&agrave; un compte</a>
       {% elif not user.ticket_purchased %}
-        <a href="/ticket" class="btn-hero">Prendre mon billet</a>
+        <a href="/ticket" class="btn-hero">R&eacute;cup&eacute;rer mon billet</a>
         <a href="/wallet" class="btn-hero-ghost">Recharger mon compte</a>
       {% else %}
         <a href="/ticket" class="btn-hero">Mon billet</a>
@@ -54,9 +54,9 @@
         <h3>Votre billet</h3>
         <p>Prenez votre billet en ligne, créez votre compte ici pour obtenir votre QR code d'entrée et de bar.</p>
         {% if not user %}
-        <a href="/register" class="btn-feature">Billetterie</a>
+        <a href="/register" class="btn-feature">R&eacute;cup&eacute;rer son compte</a>
         {% elif not user.ticket_purchased %}
-        <a href="/ticket" class="btn-feature">Billetterie</a>
+        <a href="/ticket" class="btn-feature">R&eacute;cup&eacute;rer mon billet</a>
         {% endif %}
       </div>
 
@@ -106,7 +106,7 @@
     {% if user and user.ticket_purchased %}
     <a href="/wallet" class="footer-cta">Recharger son compte</a>
     {% else %}
-    <a href="/register" class="footer-cta">Créer mon compte</a>
+    <a href="/register" class="footer-cta">R&eacute;cup&eacute;rer son compte</a>
     {% endif %}
   </div>
 </footer>

@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from app.database import Base, engine, SessionLocal
 from app import models
 from app.auth import RedirectToLogin, hash_password
-from app.routes import auth, tickets, wallet, admin, webhooks, helloasso
+from app.routes import auth, tickets, wallet, admin, webhooks, helloasso, bar
 
 logger = logging.getLogger(__name__)
 
@@ -104,3 +104,4 @@ app.include_router(wallet.router)
 app.include_router(admin.router)
 app.include_router(webhooks.router)
 app.include_router(helloasso.router)
+app.include_router(bar.router)

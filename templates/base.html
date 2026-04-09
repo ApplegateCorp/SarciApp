@@ -49,8 +49,8 @@
     .site-topbar-right .topbar-cta:hover { opacity: 0.88; color: #fff; }
 
     .pill-nav-wrapper {
-      background: var(--bg);
-      border-bottom: 1.5px solid var(--border);
+      background: var(--charcoal);
+      border-bottom: none;
       padding: 10px 16px;
       position: sticky;
       top: 50px;
@@ -62,7 +62,7 @@
       gap: 4px;
       max-width: 600px;
       margin: 0 auto;
-      background: var(--surface);
+      background: rgba(255,255,255,0.1);
       border-radius: 50px;
       padding: 4px;
       overflow-x: auto;
@@ -79,22 +79,21 @@
       font-size: 0.82rem;
       font-weight: 500;
       font-family: 'Roboto', sans-serif;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.55);
       text-decoration: none;
       white-space: nowrap;
       transition: all 0.18s;
       cursor: pointer;
     }
     .pill-item:hover {
-      color: var(--text);
-      background: var(--surface2);
+      color: #fff;
+      background: rgba(255,255,255,0.12);
       text-decoration: none;
     }
     .pill-item.active {
-      background: var(--surface);
-      color: var(--text);
+      background: rgba(255,255,255,0.18);
+      color: #fff;
       font-weight: 600;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
     .pill-icon {
       font-size: 0.9rem;
@@ -137,10 +136,10 @@
       <a href="/history" class="pill-item {% if active_tab == 'history' %}active{% endif %}">Historique</a>
       {% endif %}
       {% if user.is_bartender or user.is_admin or user.is_sub_admin %}
-      <a href="/admin/bar" class="pill-item {% if active_tab == 'bar' %}active{% endif %}">Bar</a>
+      <a href="/bar" class="pill-item {% if active_tab == 'bar' %}active{% endif %}">Bar</a>
       {% endif %}
-      {% if user.is_scanner %}
-      <a href="/admin/entry" class="pill-item {% if active_tab == 'scanner' %}active{% endif %}">Scanner</a>
+      {% if user.is_scanner or user.is_admin or user.is_sub_admin %}
+      <a href="/scanner" class="pill-item {% if active_tab == 'scanner' %}active{% endif %}">Scanner</a>
       {% endif %}
       {% endif %}
     </nav>
@@ -157,7 +156,7 @@
       {% if user and user.ticket_purchased %}
       <a href="/wallet" class="footer-cta">Recharger son compte</a>
       {% else %}
-      <a href="/register" class="footer-cta">Cr&eacute;er mon compte</a>
+      <a href="/register" class="footer-cta">R&eacute;cup&eacute;rer son compte</a>
       {% endif %}
     </div>
   </footer>

@@ -630,6 +630,7 @@ async def fix_transactions_page(
     done: str = Query(default=""),
     fixed: int = Query(default=0),
     pending: int = Query(default=0),
+    double: int = Query(default=0),
 ):
     """Preview what the fix will do."""
 
@@ -644,6 +645,7 @@ async def fix_transactions_page(
         <h1 style="color:var(--success);">&#x2714; Corrections appliqu&eacute;es</h1>
         <p>{fixed} transaction(s) corrig&eacute;e(s)</p>
         <p>{pending} billet(s) en attente cr&eacute;&eacute;(s)</p>
+        <p>{double} double(s) comptage(s) corrig&eacute;(s)</p>
         <a href="/admin/accounts" class="btn-primary" style="display:inline-block; margin-top:20px; padding:12px 28px;">Voir les comptes</a>
         </main></body></html>"""
         return HTMLResponse(html)
@@ -692,6 +694,79 @@ async def fix_transactions_page(
                 "ticket_type": ticket_type,
             })
 
+    # ── Detect double-counted tickets (assigned pending but buyer tx still has full qty) ──
+    double_count_fixes = []
+    assigned_pendings = (
+        db.query(models.PendingTicket)
+        .filter(models.PendingTicket.assigned == True, models.PendingTicket.recipient_id.isnot(None))
+        .all()
+    )
+    for pt in assigned_pendings:
+        # Find buyer's transaction that still includes this assigned ticket
+        buyer_tx = (
+            db.query(models.Transaction)
+            .filter(
+                models.Transaction.user_id == pt.buyer_id,
+                models.Transaction.type == "ticket",
+            )
+            .first()
+        )
+        if not buyer_tx:
+            continue
+        desc = buyer_tx.description or ""
+        if " x" in desc:
+            try:
+                current_qty = int(desc.rsplit(" x", 1)[1])
+            except ValueError:
+                continue
+        else:
+            # qty=1, check if there's also a recipient tx — if so, already fixed
+            continue
+        if current_qty <= 1:
+            continue
+
+        # Check recipient already has their own transaction
+        recipient_tx = (
+            db.query(models.Transaction)
+            .filter(
+                models.Transaction.user_id == pt.recipient_id,
+                models.Transaction.type == "ticket",
+            )
+            .first()
+        )
+        if not recipient_tx:
+            continue  # recipient tx doesn't exist yet, not a double-count issue
+
+        buyer = db.query(models.User).filter(models.User.id == pt.buyer_id).first()
+        recipient = db.query(models.User).filter(models.User.id == pt.recipient_id).first()
+        new_qty = current_qty - 1
+        new_amount = buyer_tx.amount_cents - pt.amount_cents
+
+        # Check we haven't already added this fix (multiple assigned pendings for same buyer)
+        already_tracked = any(d["tx_id"] == buyer_tx.id for d in double_count_fixes)
+        if already_tracked:
+            # Update existing fix entry
+            for d in double_count_fixes:
+                if d["tx_id"] == buyer_tx.id:
+                    d["new_qty"] -= 1
+                    d["new_amount"] -= pt.amount_cents
+                    d["new_desc"] = f'{pt.ticket_type} x{d["new_qty"]}' if d["new_qty"] > 1 else pt.ticket_type
+                    d["recipients"].append(recipient.name if recipient else "?")
+                    break
+        else:
+            double_count_fixes.append({
+                "tx_id": buyer_tx.id,
+                "buyer_name": buyer.name if buyer else "?",
+                "buyer_email": buyer.email if buyer else "?",
+                "current_desc": desc,
+                "current_amount": buyer_tx.amount_cents,
+                "new_qty": new_qty,
+                "new_amount": new_amount,
+                "new_desc": f"{pt.ticket_type} x{new_qty}" if new_qty > 1 else pt.ticket_type,
+                "unit_price": pt.amount_cents,
+                "recipients": [recipient.name if recipient else "?"],
+            })
+
     html = """<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Fix transactions</title>
@@ -702,6 +777,7 @@ async def fix_transactions_page(
       th { background:var(--cream); font-weight:600; font-size:0.78rem; text-transform:uppercase; }
       .fix { color:var(--orange); font-weight:600; }
       .ok { color:var(--success); }
+      h2 { margin-top:32px; }
     </style>
     </head><body>
     <nav class="navbar"><a href="/admin/dashboard" class="nav-brand">&larr; Admin</a>
@@ -709,9 +785,11 @@ async def fix_transactions_page(
     <main class="container" style="max-width:900px;">
     <h1>Corrections &agrave; appliquer</h1>"""
 
-    if not fixes:
-        html += '<p style="color:var(--success); font-weight:600; margin:24px 0;">Aucune correction n&eacute;cessaire.</p>'
-    else:
+    has_any_fix = bool(fixes) or bool(double_count_fixes)
+
+    # ── Section 1: description / pending fixes ──
+    if fixes:
+        html += f'<h2>Descriptions &amp; billets en attente</h2>'
         html += f'<p style="margin:12px 0;">{len(fixes)} transaction(s) &agrave; corriger.</p>'
         html += '<table><thead><tr><th>Utilisateur</th><th>Actuel</th><th>Corrig&eacute;</th><th>Montant</th><th>Qty</th><th>Pending &agrave; cr&eacute;er</th></tr></thead><tbody>'
         for f in fixes:
@@ -721,9 +799,29 @@ async def fix_transactions_page(
             html += f'<td class="ok">{f["new_desc"]}</td>'
             html += f'<td>{f["amount_cents"]/100:.0f}&euro;</td>'
             html += f'<td>{f["qty"]}</td>'
-            html += f'<td>{"+" + str(f["pending_to_create"]) + " billet(s)" if f["pending_to_create"] > 0 else "—"}</td>'
+            html += f'<td>{"+" + str(f["pending_to_create"]) + " billet(s)" if f["pending_to_create"] > 0 else "\u2014"}</td>'
             html += f'</tr>'
         html += '</tbody></table>'
+
+    # ── Section 2: double-count fixes ──
+    if double_count_fixes:
+        html += f'<h2>Double comptage (billets d&eacute;j&agrave; attribu&eacute;s)</h2>'
+        html += f'<p style="margin:12px 0;">{len(double_count_fixes)} transaction(s) acheteur &agrave; r&eacute;duire.</p>'
+        html += '<table><thead><tr><th>Acheteur</th><th>Actuel</th><th>Corrig&eacute;</th><th>Ancien montant</th><th>Nouveau montant</th><th>Attribu&eacute; &agrave;</th></tr></thead><tbody>'
+        for d in double_count_fixes:
+            html += f'<tr>'
+            html += f'<td><strong>{d["buyer_name"]}</strong><br><span style="color:var(--text-muted); font-size:0.8rem;">{d["buyer_email"]}</span></td>'
+            html += f'<td class="fix">{d["current_desc"]}</td>'
+            html += f'<td class="ok">{d["new_desc"]}</td>'
+            html += f'<td class="fix">{d["current_amount"]/100:.0f}&euro;</td>'
+            html += f'<td class="ok">{d["new_amount"]/100:.0f}&euro;</td>'
+            html += f'<td>{", ".join(d["recipients"])}</td>'
+            html += f'</tr>'
+        html += '</tbody></table>'
+
+    if not has_any_fix:
+        html += '<p style="color:var(--success); font-weight:600; margin:24px 0;">Aucune correction n&eacute;cessaire.</p>'
+    else:
         html += '''<form method="post" action="/admin/fix-transactions" style="margin-top:20px;">
         <button type="submit" class="btn-primary" style="padding:12px 28px;">Appliquer les corrections</button>
         </form>'''
@@ -781,9 +879,66 @@ async def apply_fix_transactions(
                 db.add(pending)
                 pending_created += 1
 
+    # ── Fix double-counted tickets (buyer tx still has full qty after assignment) ──
+    double_fixed = 0
+    assigned_pendings = (
+        db.query(models.PendingTicket)
+        .filter(models.PendingTicket.assigned == True, models.PendingTicket.recipient_id.isnot(None))
+        .all()
+    )
+    # Group by buyer tx to handle multiple assignments at once
+    buyer_tx_adjustments: dict[int, list] = {}
+    for pt in assigned_pendings:
+        buyer_tx = (
+            db.query(models.Transaction)
+            .filter(
+                models.Transaction.user_id == pt.buyer_id,
+                models.Transaction.type == "ticket",
+            )
+            .first()
+        )
+        if not buyer_tx:
+            continue
+        desc = buyer_tx.description or ""
+        if " x" not in desc:
+            continue
+        # Verify recipient has their own tx
+        recipient_tx = (
+            db.query(models.Transaction)
+            .filter(
+                models.Transaction.user_id == pt.recipient_id,
+                models.Transaction.type == "ticket",
+            )
+            .first()
+        )
+        if not recipient_tx:
+            continue
+        if buyer_tx.id not in buyer_tx_adjustments:
+            buyer_tx_adjustments[buyer_tx.id] = []
+        buyer_tx_adjustments[buyer_tx.id].append(pt)
+
+    for tx_id, pendings in buyer_tx_adjustments.items():
+        buyer_tx = db.query(models.Transaction).filter(models.Transaction.id == tx_id).first()
+        if not buyer_tx:
+            continue
+        desc = buyer_tx.description or ""
+        try:
+            current_qty = int(desc.rsplit(" x", 1)[1])
+        except (ValueError, IndexError):
+            continue
+        base_type = desc.rsplit(" x", 1)[0]
+        new_qty = current_qty - len(pendings)
+        total_deducted = sum(pt.amount_cents for pt in pendings)
+        buyer_tx.amount_cents -= total_deducted
+        if new_qty > 1:
+            buyer_tx.description = f"{base_type} x{new_qty}"
+        else:
+            buyer_tx.description = base_type
+        double_fixed += 1
+
     db.commit()
     return RedirectResponse(
-        f"/admin/fix-transactions?done=1&fixed={fixed_count}&pending={pending_created}",
+        f"/admin/fix-transactions?done=1&fixed={fixed_count}&pending={pending_created}&double={double_fixed}",
         status_code=302,
     )
 

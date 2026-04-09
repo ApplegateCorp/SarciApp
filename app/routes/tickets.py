@@ -92,14 +92,43 @@ async def assign_ticket(
 
     db.flush()
 
-    # Record transaction on the recipient
+    # Record transaction on the recipient (inherits paid status from buyer's tx)
+    buyer_tx = (
+        db.query(models.Transaction)
+        .filter(
+            models.Transaction.user_id == user.id,
+            models.Transaction.type == "ticket",
+            models.Transaction.description.contains(pending.ticket_type),
+        )
+        .first()
+    )
+    paid_status = buyer_tx.paid if buyer_tx else True
+
     tx = models.Transaction(
         user_id=recipient.id,
         amount_cents=pending.amount_cents,
         type="ticket",
         description=pending.ticket_type,
+        paid=paid_status,
     )
     db.add(tx)
+
+    # Update buyer's original transaction: reduce qty and amount
+    if buyer_tx:
+        desc = buyer_tx.description or ""
+        if " x" in desc:
+            try:
+                old_qty = int(desc.rsplit(" x", 1)[1])
+            except ValueError:
+                old_qty = 2
+        else:
+            old_qty = 2
+        new_qty = old_qty - 1
+        buyer_tx.amount_cents -= pending.amount_cents
+        if new_qty > 1:
+            buyer_tx.description = f"{pending.ticket_type} x{new_qty}"
+        else:
+            buyer_tx.description = pending.ticket_type
 
     # Mark pending ticket as assigned
     pending.assigned = True
